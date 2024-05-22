@@ -3,6 +3,19 @@
 import numpy as np
 import cv2
 import pickle
+from pathlib import Path
+import logging
+
+# from draw import show_color
+
+HERE = Path(__file__).parent
+BASE_CONTOUR_PATH = HERE / "resources/base_contour.pickle"
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.StreamHandler())
+
+with open(str(BASE_CONTOUR_PATH), mode="rb") as f:
+    base_contour = pickle.load(f)
 
 
 def apply_contrast(img, alpha=2, beta=-100):
@@ -210,3 +223,61 @@ def deform_img_to_card(
     )
     M = cv2.getPerspectiveTransform(src_points, dst_points)
     return cv2.warpPerspective(img, M, dst_shape)
+
+
+def deform_card(img_path: str, output_shape: tuple[int, int] = (660, 880)) -> np.ndarray | None:
+    """
+    From the given image path, tries to find
+
+    Args:
+        img_path (str): Path to the image to deform
+
+    Returns:
+        np.ndarray | None: Deformed image or None if it fails to find best match
+    """
+    IMG_SIZE = (512, 512)
+    img = resize_with_fill(
+        cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB), IMG_SIZE[0], IMG_SIZE[1]
+    )
+    img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+    # blurred_rgb = cv2.GaussianBlur(img, (9, 9), 0)
+    blurred_hsv = cv2.GaussianBlur(img_hsv, (9, 9), 0)
+
+    alpha = 1.3
+    beta = -20
+    img_h = apply_contrast(blurred_hsv[:, :, 0], alpha=alpha, beta=beta)
+    img_s = apply_contrast(blurred_hsv[:, :, 1], alpha=alpha, beta=beta)
+    img_v = apply_contrast(blurred_hsv[:, :, 2], alpha=alpha, beta=beta)
+    edge1 = cv2.Canny(img_h, 50, 100)
+    edge2 = cv2.Canny(img_s, 50, 100)
+    edge3 = cv2.Canny(img_v, 50, 100)
+    # edge_all = cv2.max(cv2.max(edge1, edge2), edge3)
+
+    # contours, hierarchy = cv2.findContours(edge_all, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
+    contours_all = []
+    contours, hierarchy = cv2.findContours(edge1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
+    contours_all.extend(list(contours))
+    contours, hierarchy = cv2.findContours(edge2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
+    contours_all.extend(list(contours))
+    contours, hierarchy = cv2.findContours(edge3, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
+    contours_all.extend(list(contours))
+
+    cnt_smoothed = smooth_contours(contours_all, epsilon=1)
+    cnt_smoothed_cleaned = remove_short_contours(cnt_smoothed)
+    found_contours = find_rectangle_contours(cnt_smoothed_cleaned, base_contour)
+    if not len(found_contours) > 0:
+        logger.warning("No contour was found. Exiting.")
+        return None
+
+    best_fit_contour = found_contours[0][0]
+    # best_fit_contour_convex = cv2.convexHull(best_fit_contour)
+    best_fit_contour = remove_flat_points(best_fit_contour, threshold=2)
+    best_fit_contour = get_corners_from_contour(best_fit_contour)
+    best_fit_contour = reset_orientation(best_fit_contour)
+    raw_img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
+    return deform_img_to_card(raw_img, best_fit_contour, dst_shape=output_shape)
+
+
+# if __name__ == "__main__":
+#     img_path = "/home/yuri/github.com/AoesJP/project_pokereader/data/white_bg/IMG_1488.jpeg"
+#     show_color(deform_card(img_path))
