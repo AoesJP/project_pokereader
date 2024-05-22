@@ -1,3 +1,11 @@
+# Systems
 __pycache__/
+.DS_Store
+
+# Project
 raw_data/
 .env
+.python-version
+.ipynb_checkpoints
+.png
+.DS_Store
