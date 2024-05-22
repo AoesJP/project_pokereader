@@ -7,7 +7,8 @@ from io import BytesIO
 
 def create_dataset():
     '''
-    This function creates the working dataset we will use for training the data.
+    This function creates the full working dataset we will use for training the data.
+    It does not save it though. Returns the dataframe
 
     '''
 
@@ -93,7 +94,13 @@ def create_dataset():
 
 
 
-def reduce_dataset(path):
+def reduce_dataset():
+    """
+    Imports the full dataset and drops as many rows as necessary to have maximum 150 cards per set
+    before data augmentation.
+    Separate left and right dataset.
+    It saves both the datasets as json. Return nothing.
+    """
     setinfo = np.array(
         [['dv1', '21', 'Dragon Vault', 'right'],
          ['swsh9', '186', 'Brilliant Stars', 'left'],
@@ -116,7 +123,7 @@ def reduce_dataset(path):
          ['sv3', '230', 'Obsidian Flames', 'left'],
          ['sv2', '279', 'Paldea Evolved', 'left']])
 
-    df = pd.read_json(path) # '../raw_data/dict_dataset_full.json'
+    df = pd.read_json('../raw_data/dict_dataset_full.json') # '../raw_data/dict_dataset_full.json'
 
     # setinfo_left = setinfo[setinfo[:,3] == 'left']
     # setinfo_right = setinfo[setinfo[:,3] == 'right']
