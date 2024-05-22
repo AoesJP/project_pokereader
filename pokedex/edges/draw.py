@@ -28,3 +28,13 @@ def draw_contour(img, contour, points: bool = True, line_width: int = 2, point_s
         for point in contour:
             cv2.circle(img_contour, tuple(point[0]), point_size, (255, 0, 0), -1)
     plt.imshow(img_contour)
+
+
+def draw_contours(img, contours, points: bool = True, line_width: int = 2, point_size: int = 6):
+    img_copy = img.copy()
+    img_contour = cv2.drawContours(img_copy, contours, -1, (50, 255, 0), line_width)
+    for contour in contours:
+        if points:
+            for point in contour:
+                cv2.circle(img_contour, tuple(point[0]), point_size, (255, 0, 0), -1)
+    plt.imshow(img_contour)
