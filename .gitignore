@@ -1,2 +1,6 @@
 raw_data/
 .env
+.python-version
+.ipynb_checkpoints
+.png
+.DS_Store
