@@ -4,20 +4,33 @@ import requests
 import cv2
 from PIL import Image
 from io import BytesIO
+from pokedex import HARD_CODED_WIDTH, HARD_CODED_HEIGHT, SETINFO, INITIAL_HEIGHT, INITIAL_WIDTH
 
 def crop_card(card_image):
     """
-    Input is a numpy array
-    crop to (72, 184)
+    Input is a numpy array of size (825, 600)
+    gets cropped to (72, 200)
+    add dimensions to fit the model imput size
     """
     h, w, d = card_image.shape
-    bottomleft = card_image[h-72:, :184, :]
-    bottomright = card_image[h-72:, w-184:, :]
+    bottomleft = card_image[h-HARD_CODED_HEIGHT:, :HARD_CODED_WIDTH, :]
+    bottomright = card_image[h-HARD_CODED_HEIGHT:, w-HARD_CODED_WIDTH:, :]
 
     graybottomleft = cv2.cvtColor(np.array(bottomleft), cv2.COLOR_BGR2GRAY)
     graybottomright = cv2.cvtColor(np.array(bottomright), cv2.COLOR_BGR2GRAY)
 
-    return graybottomleft, graybottomright
+    graybottomleft = np.expand_dims(graybottomleft, -1)
+    graybottomleft = np.expand_dims(graybottomleft, 0)
+
+    graybottomright = np.expand_dims(graybottomright, -1)
+    graybottomright = np.expand_dims(graybottomright, 0)
+
+    if len(graybottomright.shape) == 4 and len(graybottomleft.shape) == 4:
+        return graybottomleft, graybottomright
+    else:
+        print("Size of the cropped images is not fit to be used for model prediction.")
+        return None
+
 
 def create_dataset():
     '''
@@ -25,40 +38,17 @@ def create_dataset():
     It does not save it though. Returns the dataframe
     '''
 
-    # Array with the info about the sets of interest
-    setinfo = np.array(
-        [['dv1', '21', 'Dragon Vault', 'right'],
-         ['swsh9', '186', 'Brilliant Stars', 'left'],
-         ['swsh45', '73', 'Shining Fates', 'left'],
-         ['swsh6', '233', 'Chilling Reign', 'left'],
-         ['swsh12pt5', '160', 'Crown Zenith', 'left'],
-         ['xy1', '146', 'XY', 'right'],
-         ['xy2', '110', 'Flashfire', 'right'],
-         ['xy3', '114', 'Furious Fists', 'right'],
-         ['g1', '117', 'Generations', 'right'],
-         ['xy4', '124', 'Phantom Forces', 'right'],
-         ['xy6', '112', 'Roaring Skies', 'right'],
-         ['xy7', '100', 'Ancient Origins', 'right'],
-         ['dp1', '130', 'Diamond & Pearl', 'right'],
-         ['dp2', '124', 'Mysterious Treasures', 'right'],
-         ['sm4', '126', 'Crimson Invasion', 'left'],
-         ['swsh10', '216', 'Astral Radiance', 'left'],
-         ['sv4', '266', 'Paradox Rift', 'left'],
-         ['sv3pt5', '207', '151', 'left'],
-         ['sv3', '230', 'Obsidian Flames', 'left'],
-         ['sv2', '279', 'Paldea Evolved', 'left']])
-
     # Target array that will contain all the info we will need for training
     dataset_df = pd.DataFrame(columns=['corner', 'position', 'set_id', 'set_name'], index=[0])
     k = 0 # index within the final dataframe that will be incremented for every corner
 
     # Loop over the sets
-    for j in range(setinfo.shape[0]):
-        s_id = setinfo[j,0]
+    for j in range(SETINFO.shape[0]):
+        s_id = SETINFO[j,0]
         print(f'On-going set: {s_id}')
 
         # Loop over each image in the current set
-        for i in range(1,int(setinfo[j,1])+1):
+        for i in range(1,int(SETINFO[j,1])+1):
 
 
             # url = f'https://api.pokemontcg.io/v2/cards/{s_id}-{str(i)}'
@@ -83,9 +73,12 @@ def create_dataset():
 
                 # crop bottom corners of the card
                 card_image = np.array(image)
-                h, w, d = card_image.shape
-                bottomleft = card_image[h-72:, :184, :]
-                bottomright = card_image[h-72:, w-184:, :]
+
+                new_card = cv2.resize(card_image, (INITIAL_WIDTH, INITIAL_HEIGHT))
+
+                h, w, d = new_card.shape
+                bottomleft = new_card[h-HARD_CODED_HEIGHT:, :HARD_CODED_WIDTH, :]
+                bottomright = new_card[h-HARD_CODED_HEIGHT:, w-HARD_CODED_WIDTH:, :]
                 graybottomleft = cv2.cvtColor(bottomleft, cv2.COLOR_BGR2GRAY)
                 graybottomright = cv2.cvtColor(bottomright, cv2.COLOR_BGR2GRAY)
 
@@ -96,15 +89,15 @@ def create_dataset():
 
                 # add the cropped corners to dataframe with other info
                 # depending if the card info is on the left or right side
-                if setinfo[j,3] == 'left':
-                    dataset_df.loc[k] = [graybottomleft, setinfo[j,3], setinfo[j,0], setinfo[j,2]]
+                if SETINFO[j,3] == 'left':
+                    dataset_df.loc[k] = [graybottomleft, SETINFO[j,3], SETINFO[j,0], SETINFO[j,2]]
                     k+=1
                     dataset_df.loc[k] = [graybottomright, 'right', 'no', 'no']
                     k+=1
-                elif setinfo[j,3] == 'right':
+                elif SETINFO[j,3] == 'right':
                     dataset_df.loc[k] = [graybottomleft, 'left', 'no', 'no']
                     k+=1
-                    dataset_df.loc[k] = [graybottomright, setinfo[j,3], setinfo[j,0], setinfo[j,2]]
+                    dataset_df.loc[k] = [graybottomright, SETINFO[j,3], SETINFO[j,0], SETINFO[j,2]]
                     k+=1
             else:
                 print(f"Failed to retrieve image. HTTP Status code: {response_card.status_code}")
@@ -115,36 +108,15 @@ def create_dataset():
 
 
 
-def reduce_dataset():
+def reduce_dataset(path):
     """
     Imports the full dataset and drops as many rows as necessary to have maximum 150 cards per set
     before data augmentation.
     Separate left and right dataset.
     It saves both the datasets as json. Return nothing.
     """
-    setinfo = np.array(
-        [['dv1', '21', 'Dragon Vault', 'right'],
-         ['swsh9', '186', 'Brilliant Stars', 'left'],
-         ['swsh45', '73', 'Shining Fates', 'left'],
-         ['swsh6', '233', 'Chilling Reign', 'left'],
-         ['swsh12pt5', '160', 'Crown Zenith', 'left'],
-         ['xy1', '146', 'XY', 'right'],
-         ['xy2', '110', 'Flashfire', 'right'],
-         ['xy3', '114', 'Furious Fists', 'right'],
-         ['g1', '117', 'Generations', 'right'],
-         ['xy4', '124', 'Phantom Forces', 'right'],
-         ['xy6', '112', 'Roaring Skies', 'right'],
-         ['xy7', '100', 'Ancient Origins', 'right'],
-         ['dp1', '130', 'Diamond & Pearl', 'right'],
-         ['dp2', '124', 'Mysterious Treasures', 'right'],
-         ['sm4', '126', 'Crimson Invasion', 'left'],
-         ['swsh10', '216', 'Astral Radiance', 'left'],
-         ['sv4', '266', 'Paradox Rift', 'left'],
-         ['sv3pt5', '207', '151', 'left'],
-         ['sv3', '230', 'Obsidian Flames', 'left'],
-         ['sv2', '279', 'Paldea Evolved', 'left']])
 
-    df = pd.read_json('../raw_data/dict_dataset_full.json') # '../raw_data/dict_dataset_full.json'
+    df = pd.read_json(path) # '../raw_data/dict_dataset_full.json'
 
     # setinfo_left = setinfo[setinfo[:,3] == 'left']
     # setinfo_right = setinfo[setinfo[:,3] == 'right']
@@ -169,10 +141,10 @@ def reduce_dataset():
 
         return df_small
 
-    df_small_left = df_side(setinfo, side = 'left')
-    df_small_left.to_json('../raw_data/dict_reduceddataset_left.json')
+    df_small_left = df_side(SETINFO, side = 'left')
+    df_small_left.to_json('../../raw_data/dict_reduceddataset_left.json')
 
-    df_small_right = df_side(setinfo, side = 'right')
-    df_small_right.to_json('../raw_data/dict_reduceddataset_right.json')
+    df_small_right = df_side(SETINFO, side = 'right')
+    df_small_right.to_json('../../raw_data/dict_reduceddataset_right.json')
 
     return None
