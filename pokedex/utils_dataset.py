@@ -5,11 +5,24 @@ import cv2
 from PIL import Image
 from io import BytesIO
 
+def crop_card(card_image):
+    """
+    Input is a numpy array
+    crop to (72, 184)
+    """
+    h, w, d = card_image.shape
+    bottomleft = card_image[h-72:, :184, :]
+    bottomright = card_image[h-72:, w-184:, :]
+
+    graybottomleft = cv2.cvtColor(np.array(bottomleft), cv2.COLOR_BGR2GRAY)
+    graybottomright = cv2.cvtColor(np.array(bottomright), cv2.COLOR_BGR2GRAY)
+
+    return graybottomleft, graybottomright
+
 def create_dataset():
     '''
     This function creates the full working dataset we will use for training the data.
     It does not save it though. Returns the dataframe
-
     '''
 
     # Array with the info about the sets of interest
@@ -65,14 +78,22 @@ def create_dataset():
                 image = Image.open(BytesIO(response_card.content))
 
                 # Save the image to a file
-                image.save(f"../raw_data/pokemon_cards_api/card_{s_id}_{str(i)}.png")
+                # image.save(f"../raw_data/pokemon_cards_api/card_{s_id}_{str(i)}.png")
+                # width, height = image.size
 
-                width, height = image.size
                 # crop bottom corners of the card
-                bottomleft = image.crop((width*0.75, height*0.93, width, height))
-                bottomright = image.crop((0, height*0.93, width*0.25, height))
-                graybottomleft = cv2.cvtColor(np.array(bottomleft), cv2.COLOR_BGR2GRAY)
-                graybottomright = cv2.cvtColor(np.array(bottomright), cv2.COLOR_BGR2GRAY)
+                card_image = np.array(image)
+                h, w, d = card_image.shape
+                bottomleft = card_image[h-72:, :184, :]
+                bottomright = card_image[h-72:, w-184:, :]
+                graybottomleft = cv2.cvtColor(bottomleft, cv2.COLOR_BGR2GRAY)
+                graybottomright = cv2.cvtColor(bottomright, cv2.COLOR_BGR2GRAY)
+
+                # bottomleft = image.crop((width*0.75, height*0.93, width, height))
+                # bottomright = image.crop((0, height*0.93, width*0.25, height))
+                # graybottomleft = cv2.cvtColor(np.array(bottomleft), cv2.COLOR_BGR2GRAY)
+                # graybottomright = cv2.cvtColor(np.array(bottomright), cv2.COLOR_BGR2GRAY)
+
                 # add the cropped corners to dataframe with other info
                 # depending if the card info is on the left or right side
                 if setinfo[j,3] == 'left':
