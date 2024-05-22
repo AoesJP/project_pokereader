@@ -50,7 +50,7 @@ def get_augment_data(dataset_path_name):
     Combines the functions to augment the number of images in the dataset
     """
     df = pd.read_json(dataset_path_name)
-    df['corner']=[np.array(v) for v in df['corner']]
+    df['corner'] = [np.array(v) for v in df['corner']]
     df['corner'] = df['corner'].apply(transform_array)
 
     set_size = pd.DataFrame(df[['set_id']].value_counts())
@@ -58,8 +58,11 @@ def get_augment_data(dataset_path_name):
     set_size['num_of_aug'] = 300-set_size['count']
 
     for index, row in set_size.iterrows():
+        min_idx = min(df[df['set_id'] == set_size.loc[index, 'set_id']].index)
+        max_idx = max(df[df['set_id'] == set_size.loc[index, 'set_id']].index)
+
         for i in range(set_size.loc[index, 'num_of_aug']):
-            i_rand = np.random.randint(0, high=set_size.loc[index, 'count'])
+            i_rand = np.random.randint(min_idx, high=max_idx)
             image_ = df.loc[i_rand, 'corner']
             augmented_image = generate_augmented_image(image_)
 
