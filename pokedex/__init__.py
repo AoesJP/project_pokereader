@@ -6,6 +6,9 @@ INITIAL_HEIGHT = 825
 HARD_CODED_WIDTH = 200
 HARD_CODED_HEIGHT = 72
 
+NB_CARDS_PER_SET = 1000
+REDUCED_SET = 500
+
 SETINFO = np.array(
         [['dv1', '21', 'Dragon Vault', 'right'],
          ['swsh9', '186', 'Brilliant Stars', 'left'],

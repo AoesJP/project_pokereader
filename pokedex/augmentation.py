@@ -4,6 +4,7 @@ import pandas as pd
 
 import cv2
 import tensorflow as tf
+from pokedex import NB_CARDS_PER_SET
 
 
 def apply_blur(img):
@@ -60,7 +61,7 @@ def get_augment_data(dataset_path_name):
 
     set_size = pd.DataFrame(df[['set_id']].value_counts())
     set_size.reset_index(inplace=True)
-    set_size['num_of_aug'] = 300-set_size['count']
+    set_size['num_of_aug'] = NB_CARDS_PER_SET-set_size['count']
 
     for index, row in set_size.iterrows():
         min_idx = min(df[df['set_id'] == set_size.loc[index, 'set_id']].index)
