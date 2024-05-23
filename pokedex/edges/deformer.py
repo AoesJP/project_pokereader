@@ -52,9 +52,7 @@ def resize_with_fill(image: np.ndarray, target_width: int, target_height: int):
     right = target_width - new_width - left
 
     # Pad the resized image to the desired size with black color
-    padded_image = cv2.copyMakeBorder(
-        resized_image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0]
-    )
+    padded_image = cv2.copyMakeBorder(resized_image, top, bottom, left, right, cv2.BORDER_CONSTANT, value=[0, 0, 0])
 
     return padded_image
 
@@ -209,9 +207,9 @@ def deform_img_to_card(
     offset = (img_offset, 0) if img_shape[0] > img_shape[1] else (img_offset, 0)
     scale_factor = max(img_shape) / max(src_shape)
 
-    src_points = np.squeeze(contour, axis=1).astype("float32") * np.array(
-        [scale_factor, scale_factor], dtype="float32"
-    ) - np.array(offset, dtype="float32")
+    src_points = np.squeeze(contour, axis=1).astype("float32") * np.array([scale_factor, scale_factor], dtype="float32") - np.array(
+        offset, dtype="float32"
+    )
     dst_points = np.array(
         [
             [0, 0],
@@ -236,9 +234,7 @@ def deform_card(img_path: str, output_shape: tuple[int, int] = (660, 880)) -> np
         np.ndarray | None: Deformed image or None if it fails to find best match
     """
     IMG_SIZE = (512, 512)
-    img = resize_with_fill(
-        cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB), IMG_SIZE[0], IMG_SIZE[1]
-    )
+    img = resize_with_fill(cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB), IMG_SIZE[0], IMG_SIZE[1])
     img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
     # blurred_rgb = cv2.GaussianBlur(img, (9, 9), 0)
     blurred_hsv = cv2.GaussianBlur(img_hsv, (9, 9), 0)

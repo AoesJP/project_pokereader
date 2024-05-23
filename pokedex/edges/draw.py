@@ -5,15 +5,18 @@ import cv2
 import matplotlib.pyplot as plt
 
 
-def show_color(img):
+def show_color(img, figsize=(10, 10)):
+    plt.figure(figsize=figsize)
     plt.imshow(img, vmin=0, vmax=255)
 
 
-def show_grey(img):
+def show_grey(img, figsize=(10, 10)):
+    plt.figure(figsize=figsize)
     plt.imshow(img, cmap="grey", vmin=0, vmax=255)
 
 
-def show_channels(img: np.ndarray):
+def show_channels(img: np.ndarray, figsize=(10, 10)):
+    plt.figure(figsize=figsize)
     channels = img.shape[2]
     plt.figure(figsize=(6 * channels, 6))
     for i in range(channels):
