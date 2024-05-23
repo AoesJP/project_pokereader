@@ -49,35 +49,3 @@ def preprocessing(path):
     y_test = categories[nb_split2:,:]
 
     return XX_train, y_train, XX_val, y_val, XX_test, y_test, label_encoder
-
-def initialize_model():
-    model = Sequential([
-        layers.Conv2D(32, (5,5), padding='same', activation="relu", input_shape=(HARD_CODED_HEIGHT,HARD_CODED_WIDTH,1)),
-        layers.MaxPool2D(pool_size=(2,2)),
-        layers.Conv2D(32, (3,3), padding='same', activation="relu"),
-        layers.MaxPool2D(pool_size=(2,2)),
-        layers.Dropout(0.3),
-        layers.Flatten(),
-        layers.Dense(128, activation='relu'),
-        layers.Dense(11, activation='softmax')
-    ])
-    model.compile(
-        loss='categorical_crossentropy',
-        optimizer='adam',
-        metrics=['accuracy']
-    )
-    return model
-
-
-def fit_model(model, X_train, y_train, X_val, y_val, nb_epochs=10, batch_size=32):
-    es = EarlyStopping(patience = 5, restore_best_weights=True)
-
-    history = model.fit(
-        X_train, y_train,
-        epochs = nb_epochs,
-        batch_size = batch_size,
-        validation_data = (X_val, y_val),
-        callbacks = es,
-        verbose = 1
-        )
-    return model, history
