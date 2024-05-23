@@ -45,6 +45,11 @@ def transform_array(image_np):
     expanded_image = np.expand_dims(reshaped_image, axis=0)
     return expanded_image
 
+def squeeze_photo(im_array):
+    if im_array.ndim > 3:
+        return np.squeeze(im_array, axis=0)
+    return im_array
+
 def get_augment_data(dataset_path_name):
     """
     Combines the functions to augment the number of images in the dataset
@@ -71,4 +76,5 @@ def get_augment_data(dataset_path_name):
 
             df = pd.concat([df, new_df], axis=0, ignore_index=True)
 
+    df['corner'] = df['corner'].apply(squeeze_photo)
     return df
