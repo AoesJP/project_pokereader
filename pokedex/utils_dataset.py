@@ -4,33 +4,8 @@ import requests
 import cv2
 from PIL import Image
 from io import BytesIO
-from pokedex import HARD_CODED_WIDTH, HARD_CODED_HEIGHT, SETINFO, INITIAL_HEIGHT, INITIAL_WIDTH
-
-def crop_card(card_image):
-    """
-    Input is a numpy array of size (825, 600)
-    gets cropped to (72, 200)
-    add dimensions to fit the model imput size
-    """
-    h, w, d = card_image.shape
-    bottomleft = card_image[h-HARD_CODED_HEIGHT:, :HARD_CODED_WIDTH, :]
-    bottomright = card_image[h-HARD_CODED_HEIGHT:, w-HARD_CODED_WIDTH:, :]
-
-    graybottomleft = cv2.cvtColor(np.array(bottomleft), cv2.COLOR_BGR2GRAY)
-    graybottomright = cv2.cvtColor(np.array(bottomright), cv2.COLOR_BGR2GRAY)
-
-    graybottomleft = np.expand_dims(graybottomleft, -1)
-    graybottomleft = np.expand_dims(graybottomleft, 0)
-
-    graybottomright = np.expand_dims(graybottomright, -1)
-    graybottomright = np.expand_dims(graybottomright, 0)
-
-    if len(graybottomright.shape) == 4 and len(graybottomleft.shape) == 4:
-        return graybottomleft, graybottomright
-    else:
-        print("Size of the cropped images is not fit to be used for model prediction.")
-        return None
-
+from pokedex import HARD_CODED_WIDTH, HARD_CODED_HEIGHT, INITIAL_HEIGHT, INITIAL_WIDTH
+from pokedex import SETINFO, REDUCED_SET
 
 def create_dataset():
     '''
@@ -128,16 +103,16 @@ def reduce_dataset(path):
         set_list = np.append(set_list, 'no')
 
         nb_cards = np.array([sum((df['set_id'] == set_list[i]) & (df['position'] == side)) for i in range(set_list.shape[0])])
-        set_to_dropcards = np.vstack((set_list[nb_cards > 150], nb_cards[nb_cards > 150]))
+        set_to_dropcards = np.vstack((set_list[nb_cards > REDUCED_SET], nb_cards[nb_cards > REDUCED_SET]))
 
         df_small = pd.DataFrame()
 
         for i in range(set_to_dropcards.shape[1]):
-            idx = np.random.randint(0, high=int(set_to_dropcards[1,i]), size=150, dtype=int)
+            idx = np.random.randint(0, high=int(set_to_dropcards[1,i]), size=REDUCED_SET, dtype=int)
             df_small = pd.concat([ df_small, df[(df['set_id'] == set_to_dropcards[0,i]) & (df['position'] == side)].iloc[idx] ], axis=0, ignore_index=True)
 
-        for i in range(len(set_list[nb_cards <= 150])):
-            df_small = pd.concat([ df_small, df[df['set_id'] == set_list[nb_cards <= 150][i]] ], axis=0, ignore_index=True)
+        for i in range(len(set_list[nb_cards <= REDUCED_SET])):
+            df_small = pd.concat([ df_small, df[df['set_id'] == set_list[nb_cards <= REDUCED_SET][i]] ], axis=0, ignore_index=True)
 
         return df_small
 
