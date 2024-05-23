@@ -5,6 +5,7 @@ import cv2
 import pickle
 from pathlib import Path
 import logging
+from pokedex import HIRES_HEIGHT, HIRES_WIDTH
 
 # from draw import show_color
 
@@ -190,7 +191,7 @@ def deform_img_to_card(
     img: np.ndarray,
     contour,
     src_shape: tuple[int, int] = (512, 512),
-    dst_shape: tuple[int, int] = (630, 880),
+    dst_shape: tuple[int, int] = (HIRES_WIDTH, HIRES_HEIGHT),
 ):
     """
     Deforms image based on given points represent corners
@@ -199,7 +200,7 @@ def deform_img_to_card(
         img (np.ndarray): Image array
         contour (_type_): ndarray of points, 3 dimentions
         src_shape (tuple[int, int], optional): Shape of pints. Defaults to (512, 512).
-        dst_shape (tuple[int, int], optional): SHape of out image. Defaults to (630, 880).
+        dst_shape (tuple[int, int], optional): SHape of out image. Defaults to (600, 825).
 
     Returns:
         _type_: Deformed image
@@ -225,7 +226,7 @@ def deform_img_to_card(
     return cv2.warpPerspective(img, M, dst_shape)
 
 
-def deform_card(img_path: str, output_shape: tuple[int, int] = (660, 880)) -> np.ndarray | None:
+def deform_card(img_path: str, output_shape: tuple[int, int] = (HIRES_WIDTH, HIRES_HEIGHT)) -> np.ndarray | None:
     """
     From the given image path, tries to find
 
