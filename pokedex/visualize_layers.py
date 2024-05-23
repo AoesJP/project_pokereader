@@ -2,21 +2,24 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-def visualize_activations(model, img_array, layers):
+def visualize_activations(model, img_array):
+
+    layer_names = []
+    for layer in model.layers:
+        layer_names.append(layer.name)
 
     img_array = np.expand_dims(img_array, axis=0)
-    # img_array = preprocess_input(img_array)
 
-    outputs = [model.get_layer(layer).output for layer in layers]
+    outputs = [model.get_layer(layer).output for layer in layer_names]
     activation_model = tf.keras.models.Model(inputs=model.inputs, outputs=outputs)
 
     activations = activation_model.predict(img_array)
 
     plt.figure(figsize=(15, 8))
     for i, activation in enumerate(activations):
-        plt.subplot(1, len(layers), i + 1)
+        plt.subplot(1, len(layer_names), i + 1)
         plt.imshow(activation[0, :, :, 0], cmap='viridis')  # Adjust the indexing if needed
-        plt.title(f'Activation - {layers[i]}')
+        plt.title(f'Activation - {layer_names[i]}')
         plt.axis('off')
 
     plt.show()
@@ -66,3 +69,29 @@ def plot_gradcam(model, img_array, layer_name, label, confidence):
     plt.title(f'GradCAM ({layer_name})')
 
     plt.show()
+
+
+
+layer_names = ['block1_conv1', 'block1_conv2', 'block2_conv1', 'block2_conv1', 'block3_conv1']
+
+number = 0
+
+name = X_test[number]
+test_image_array = np.asarray(name)
+visualize_activations(model, test_image_array)
+
+predictions = model.predict(image)
+
+predicted_class_index = np.argmax(predictions[0])
+confidence = predictions[0][predicted_class_index]
+
+class_labels = ["Normal", "Nodule", "Airspaces", "Bronch", "Parenchyma"]
+predicted_label = class_labels[predicted_class_index]
+
+print(f"Predicted class: {predicted_label}")
+print(f"Confidence: {confidence:.2%}")
+
+print(y_test[number])
+
+for layer_name in layer_names:
+    plot_gradcam(fine_tuned_model, test_image_array, layer_name, predicted_label, confidence)

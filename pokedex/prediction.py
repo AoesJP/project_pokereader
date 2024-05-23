@@ -1,4 +1,5 @@
 from pokedex import HARD_CODED_WIDTH, HARD_CODED_HEIGHT, INITIAL_HEIGHT, INITIAL_WIDTH
+from pokedex import SETINFO
 import cv2
 import numpy as np
 
@@ -34,9 +35,13 @@ def card_prediction_processing(card):
         return None
 
 
-def card_ocr_crop(card):
-    h, w, d = card.shape
-    bottomleft = card[h-HARD_CODED_HEIGHT*3:, :HARD_CODED_WIDTH*3, :]
-    bottomright = card[h-HARD_CODED_HEIGHT*3:, w-HARD_CODED_WIDTH*3:, :]
+def card_ocr_crop(card, set_id):
+    side = SETINFO[SETINFO[:,0] == set_id][0,3]
 
-    return bottomleft, bottomright
+    h, w, d = card.shape
+    if side == 'left':
+        bottomleft = card[h-HARD_CODED_HEIGHT*3:, :HARD_CODED_WIDTH*3, :]
+        return bottomleft
+    elif side == 'right':
+        bottomright = card[h-HARD_CODED_HEIGHT*3:, w-HARD_CODED_WIDTH*3:, :]
+        return bottomright

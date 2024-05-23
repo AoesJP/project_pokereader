@@ -38,14 +38,13 @@ elif set_left == 'no':
 
 ## ---- NUMBER ID ---- ##
 # OCR on high res picture
-set_id
-bottomleft, bottomright = card_ocr_crop(card_image)
+bottomcorner = card_ocr_crop(card_image, set_id)
 # -- add OCR model -- #
 
-number_id
+poke_id
 
 
 
 ## ---- API call ---- ##
 set_id
-number_id
+poke_id
