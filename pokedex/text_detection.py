@@ -36,7 +36,7 @@ def get_id_coords(set_id):
     # left sets
     if set_id == 'sv3':
         id_coord = (115, 17, 205, 40)
-    elif set_id in ('swsh9', 'swsh6', 'swsh12pt5', 'swsh10'):
+    elif set_id in ('swsh9', 'swsh6', 'swsh12pt5', 'swsh10','swsh45'):
         id_coord = (110, 17, 190, 40)
     elif set_id in ('sv4', 'sv3pt5', 'sv2'):
         id_coord = (115, 17, 205, 40)
@@ -46,8 +46,10 @@ def get_id_coords(set_id):
     # right sets
     elif set_id == 'dv1':
         id_coord = (70, 25, 110, 27)
+    #     id_coord = (70*3, 25*3, 110*3, 27*3)
     elif set_id == 'xy1':
         id_coord = (38, 25, 91, 27)
+        # id_coord = (38*3, 25*3, 91*3, 27*3)
     elif set_id in ('xy2', 'xy3'):
         id_coord = (36, 26, 91, 32)
     elif set_id == 'g1':
@@ -65,12 +67,14 @@ def get_id_coords(set_id):
 
 def ocr_preprocessor(img,set_id):
     img = preproc_clean(img).squeeze()
-    img= Image.fromarray(img)
-    side_offset = 10 #we need to fine tune this
+    resized_img = cv2.resize(img, (200, 72))
+    gray_img = cv2.cvtColor(resized_img, cv2.COLOR_BGR2GRAY)
+    img= Image.fromarray(gray_img)
+    side_offset = 30 #we need to fine tune this
     a,b,c,d = get_id_coords(set_id)
-
     img = img.crop((a - side_offset, b-side_offset, c+side_offset, d+ side_offset))
     img_contrast = img.resize((img.width * 3, img.height * 3), Image.BICUBIC)
+    # img_contrast = img
     contrast_enhancer = ImageEnhance.Contrast(img_contrast)
     img_contrast = contrast_enhancer.enhance(1)
     median = np.median(img_contrast)
