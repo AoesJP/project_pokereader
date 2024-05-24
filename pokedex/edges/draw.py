@@ -41,3 +41,17 @@ def draw_contours(img, contours, points: bool = True, line_width: int = 2, point
             for point in contour:
                 cv2.circle(img_contour, tuple(point[0]), point_size, (255, 0, 0), -1)
     plt.imshow(img_contour)
+
+
+def draw_lines(img: np.ndarray, lines: np.ndarray):
+    img_copy = img.copy()
+    for line in lines:
+        a, b, c = line
+        x0 = -a * c
+        y0 = -b * c
+        x1 = int(x0 + 2000 * (-b))
+        y1 = int(y0 + 2000 * (a))
+        x2 = int(x0 - 2000 * (-b))
+        y2 = int(y0 - 2000 * (a))
+        cv2.line(img_copy, (x1, y1), (x2, y2), (255, 0, 255), 2)
+    plt.imshow(img_copy)
