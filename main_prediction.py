@@ -49,4 +49,4 @@ im_text = get_pokeid(bottomcorner,set_id)
 # im_text cleaning
 
 ## ---- API call ---- ##
-info = get_card_info(set_id, poke_id)
+(rarity, market_price, image_url) = get_card_info(set_id, poke_id)

@@ -52,4 +52,16 @@ def get_card_info(set_id, poke_id):
     url = f'https://api.pokemontcg.io/v2/cards/{set_id}-{str(poke_id)}'
     response = requests.get(url)
     if response.status_code == 200:
-        image_url = response.json()
+        result = response.json()
+
+        rarity = result['data']['rarity']
+        market_price = result['data']['cardmarket']['prices']['averageSellPrice']
+        image_url = result['data']['images']['large']
+
+        print(rarity)
+        print(market_price)
+        print(image_url)
+        return rarity, market_price, image_url
+    else:
+        print(f"Failed to retrieve info. HTTP Status code: {response.status_code}")
+        return None
