@@ -72,19 +72,22 @@ def flatten_color(img: np.ndarray) -> np.ndarray:
 #     return img_copressed.reshape((img_width, img_height, 3)).astype(np.uint8)
 
 
-def remove_short_contours(contours, threshold: int = 300) -> list[np.ndarray]:
+def remove_short_long_contours(contours, resolution: tuple[int, int], min_length: int = 300, max_ratio: float = 0.1) -> list[np.ndarray]:
     results = []
+    max_length = resolution[0] * 2 + resolution[1] * 2
     for contour in contours:
         length = cv2.arcLength(contour, True)
-        if length > threshold:
+        if (length > min_length) and (length < max_length * (1 - max_ratio)):
             results.append(contour)
 
     return results
 
 
-def smooth_contours(contours, epsilon: int = 5) -> list[np.ndarray]:
+def smooth_contours(contours, ratio: float = 0.0005) -> list[np.ndarray]:
     new_contours = []
     for contour in contours:
+        arc_length = cv2.arcLength(contour, closed=True)
+        epsilon = np.sqrt(arc_length) * ratio
         approx = cv2.approxPolyDP(contour, epsilon, True)
         new_contours.append(approx)
 
@@ -224,6 +227,39 @@ def deform_img_to_card(
     return cv2.warpPerspective(img, M, dst_shape)
 
 
+def deform_img_to_card_from_pt(
+    img: np.ndarray,
+    pts: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+    src_shape: tuple[int, int] = (512, 512),
+    dst_shape: tuple[int, int] = (HIRES_WIDTH, HIRES_HEIGHT),
+):
+    """
+    Deforms image based on given points represent corners
+
+    Args:
+        img (np.ndarray): Image array
+        contour (_type_): ndarray of points, 3 dimentions
+        src_shape (tuple[int, int], optional): Shape of pints. Defaults to (512, 512).
+        dst_shape (tuple[int, int], optional): SHape of out image. Defaults to (600, 825).
+
+    Returns:
+        _type_: Deformed image
+    """
+
+    src_points = np.array(pts, dtype="float32")
+    dst_points = np.array(
+        [
+            [0, 0],
+            [dst_shape[0] - 1, 0],
+            [dst_shape[0] - 1, dst_shape[1] - 1],
+            [0, dst_shape[1] - 1],
+        ],
+        dtype="float32",
+    )
+    M = cv2.getPerspectiveTransform(src_points, dst_points)
+    return cv2.warpPerspective(img, M, dst_shape)
+
+
 def deform_card(img_path: str, output_shape: tuple[int, int] = (HIRES_WIDTH, HIRES_HEIGHT)) -> np.ndarray | None:
     """
     From the given image path, tries to find
@@ -260,7 +296,7 @@ def deform_card(img_path: str, output_shape: tuple[int, int] = (HIRES_WIDTH, HIR
     contours_all.extend(list(contours))
 
     cnt_smoothed = smooth_contours(contours_all, epsilon=1)
-    cnt_smoothed_cleaned = remove_short_contours(cnt_smoothed)
+    cnt_smoothed_cleaned = remove_short_long_contours(cnt_smoothed)
     found_contours = find_rectangle_contours(cnt_smoothed_cleaned, base_contour)
     if not len(found_contours) > 0:
         logger.warning("No contour was found. Exiting.")
