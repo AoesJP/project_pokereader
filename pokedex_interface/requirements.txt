@@ -27,7 +27,7 @@ scikit-learn==1.4.2
 tensorflow==2.16.1
 pyocr==0.8.5
 streamlit==1.35.0
-
+opencv-python-headless
 anyio==4.3.0
 appnope==0.1.4
 argon2-cffi==23.1.0
