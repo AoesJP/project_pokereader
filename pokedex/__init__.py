@@ -1,5 +1,7 @@
 import numpy as np
 
+BUCKET_NAME = 'pokedex_data'
+
 RATIO = 3
 
 INITIAL_WIDTH = 600
