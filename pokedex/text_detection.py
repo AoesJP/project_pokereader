@@ -6,6 +6,10 @@ import numpy as np
 import cv2
 from PIL import Image,ImageEnhance,ImageOps
 
+import re
+
+from pokedex import SETINFO
+
 def preproc_clean(data: list):
     _ = np.array(data)
     return np.expand_dims(_, axis=2).astype("uint8")
@@ -16,7 +20,7 @@ def get_id_coords(set_id):
     id_coord = None
 
     # left sets
-    if set_id == ('sv3', 'sv4', 'sv3pt5', 'sv2'):
+    if set_id in ('sv3', 'sv4', 'sv3pt5', 'sv2'):
         id_coord = (285, 75, 550, 125) # checked
     elif set_id in ('swsh9', 'swsh6', 'swsh12pt5', 'swsh10','swsh45'):
         id_coord = (280, 75, 540, 125) # checked
@@ -24,7 +28,7 @@ def get_id_coords(set_id):
         id_coord = (200, 70, 470, 90) # checked
 
     # right sets
-    elif set_id == ('dv1', 'g1'):
+    elif set_id in ('dv1', 'g1'):
         id_coord = (210, 90, 390, 110) # checked
     elif set_id == 'xy1':
         id_coord = (150, 90, 340, 110) # checked
@@ -83,8 +87,94 @@ def ocr_text(img):
 
     return result
 
+def extract_number_before_slash_or_cardtotal(text, set_id):
+    # storing the number the should show on right side of slash
+    sequence = SETINFO[SETINFO[:, 0] == set_id][0,4]
+
+    # Remove all special characters except digits, slash, and the specific sequence
+    cleaned_text = re.sub(r'[^0-9/]', '', text)
+
+    # Check if a slash exists in the cleaned text
+    if '/' in cleaned_text:
+        # Regular expression to find numbers before a slash
+        match = re.search(r'(\d+)(?=/)', cleaned_text)
+        if match:
+            return match.group(1)
+        else:
+            # If no digits are found before the slash, return an empty string
+            return ''
+    else:
+        # Check if the sequence exists in the cleaned text and is followed by a non-digit or end of string
+        pattern = rf'(\d+)(?={sequence}(?!\d))'
+        match = re.search(pattern, cleaned_text)
+        if match:
+            return match.group(1)[:-1]
+        else:
+            # If no slash and no sequence, extract all digits in the cleaned text
+            number_match = re.search(r'\d+', cleaned_text)
+            if number_match:
+                return number_match.group(0)
+            else:
+                # If no digits are found, return an empty string or handle it as needed
+                return ''
+
+def clean_pokeid(pokeid,set_id):
+    if ' ' in pokeid:
+        pokeid = pokeid.split(' ', 1)[1]
+
+    pokeid = extract_number_before_slash_or_cardtotal(pokeid, set_id)
+
+    pokeid = re.sub(r'[^A-Za-z0-9]', '', pokeid)
+    if pokeid != '':
+        if set_id == 'dv1': # checked
+            if len(pokeid) > 2:
+                pokeid =  pokeid[:2]
+            if len(pokeid) == 2 and pokeid[0] == '7':
+                pokeid = '1' + pokeid[1:]
+
+        elif set_id in ('swsh9','swsh45','swsh6','swsh12pt5','swsh10'): # checked
+            if len(pokeid) > 3:
+                pokeid =  pokeid[-3:]
+            if len(pokeid) == 3 and pokeid[0] == '7':
+                pokeid = '1' + pokeid[1:]
+
+        elif set_id in ('xy1','xy2','xy3','xy4','xy6','xy7'): # checked
+            if len(pokeid) > 3:
+                pokeid =  pokeid[-3:]
+            if len(pokeid) == 3 and pokeid[0] == '7':
+                pokeid = '1' + pokeid[1:]
+
+        elif set_id == 'g1': # checked
+            if len(pokeid) > 3:
+                pokeid =  pokeid[-3:]
+            if len(pokeid) == 3 and pokeid[0] == '7':
+                pokeid = '1' + pokeid[1:]
+
+        elif set_id in ('dp1','dp2',): # checked
+            if len(pokeid) > 3:
+                pokeid =  pokeid[-3:]
+            if len(pokeid) == 3 and pokeid[0] == '7':
+                pokeid = '1' + pokeid[1:]
+
+        elif set_id == 'sm4':
+            if len(pokeid) > 3:
+                pokeid =  pokeid[-3:]
+            if len(pokeid) == 3 and pokeid[0] == '7':
+                pokeid = '1' + pokeid[1:]
+
+        elif set_id in ('sv4','sv3pt5','sv3','sv2'):
+            if len(pokeid) > 3:
+                pokeid =  pokeid[-3:]
+            if len(pokeid) == 3 and pokeid[0] == '7':
+                pokeid = '1' + pokeid[1:]
+
+    return pokeid
+
 
 def get_pokeid(img,set_id):
     """Returns pokemon card number written on the corner"""
     preprocessed_img = ocr_preprocessor(img,set_id)
-    return ocr_text(preprocessed_img)
+    pokeid = ocr_text(preprocessed_img)
+    print(pokeid)
+    pokeid_cleaned = clean_pokeid(pokeid,set_id)
+    return pokeid_cleaned
