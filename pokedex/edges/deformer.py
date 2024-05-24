@@ -161,6 +161,44 @@ def reset_orientation(contour):
     return np.expand_dims(contour, axis=1)
 
 
+def remove_protrude(img: np.ndarray, contour: np.ndarray, margin: int = 3):
+    img_mask = np.zeros_like(img[:, :, 0])
+    cv2.drawContours(img_mask, [contour], -1, (255), thickness=cv2.FILLED)
+    kernel = np.ones((2 * margin + 1, 2 * margin + 1), np.uint8)
+    img_mask = cv2.erode(img_mask, kernel, iterations=1)
+    img_mask = cv2.dilate(img_mask, kernel, iterations=2)
+    img_shape = img_mask.shape
+
+    ctr = contour.squeeze()
+    ctr = ctr[(ctr[:, 0] >= 0) & (ctr[:, 0] <= img_shape[1]) & (ctr[:, 1] >= 0) & (ctr[:, 1] <= img_shape[0])]
+    return np.expand_dims(ctr[img_mask[ctr[:, 1], ctr[:, 0]] > 0], axis=1)
+
+
+def calc_lines(lines: np.ndarray) -> np.ndarray:
+    lines = lines.squeeze()
+    new_lines = []
+    for rho, theta in lines:
+        a = np.cos(theta)
+        b = np.sin(theta)
+        c = -rho
+        new_lines.append([a, b, c])
+
+    return np.array(new_lines, dtype="float32")
+
+
+def find_intersection(a: tuple, b: tuple):
+    a1, b1, c1 = a[0], a[1], a[2]
+    a2, b2, c2 = b[0], b[1], b[2]
+    A = np.array([[a1, b1], [a2, b2]])
+    B = np.array([-c1, -c2])
+
+    try:
+        intersection_point = np.linalg.solve(A, B)
+        return intersection_point
+    except np.linalg.LinAlgError:
+        raise ValueError("The lines are parallel and do not intersect.")
+
+
 def get_corners_from_contour(contour):
     pt_count = len(contour)
     ranks = []
@@ -187,6 +225,73 @@ def get_corners_from_contour(contour):
         corners.append(intersect_pt)
 
     return np.expand_dims(np.array(corners), axis=1).astype(np.int32)
+
+
+def get_corners_from_lines(lines: list[np.ndarray], contour: np.ndarray):
+    def line_equation(slope, point):
+        m = slope
+        x1, y1 = point
+        a = m
+        b = -1
+        c = y1 - m * x1
+
+        return a, b, c
+
+    lines_r = []
+    lines_l = []
+    lines_t = []
+    lines_b = []
+
+    vx, vy, x, y = cv2.fitLine(contour, cv2.DIST_L2, 0, 0.01, 0.01)
+
+    # main_inter = main_b[0] / main_a[0]
+    # sub_inter = -1 / main_inter
+
+    main_d = np.array((vy[0], vx[0])) / np.linalg.norm((vy[0], vx[0]), ord=2)
+    sub_d = np.array((vx[0], -vy[0])) / np.linalg.norm((vx[0], -vy[0]), ord=2)
+    main_a, main_b, main_c = line_equation(vy[0] / vx[0], (x[0], y[0]))
+    sub_a, sub_b, sub_c = line_equation(sub_d[0] / sub_d[1], (x[0], y[0]))
+    # print(main_a, main_b, main_c)
+    # print(sub_a, sub_b, sub_c)
+
+    center = contour.squeeze().mean(axis=0)
+
+    for line in lines:
+        a, b, c = line
+        # lines_r.append(val_x)
+
+        line_d = np.array((a, -b)) / np.linalg.norm((a, -b))
+        # val_x = a * center[0] + b * center[1] + c
+
+        dot_prd = np.dot(line_d, main_d)
+        if abs(dot_prd) > 0.5:  # Vertical Lines
+            intersect = find_intersection((sub_a, sub_b, sub_c), (a, b, c))
+            if intersect[0] < center[0]:  # Left
+                # print("Left")
+                lines_l.append(line)
+            else:  # Right
+                # print("Right")
+                lines_r.append(line)
+        else:
+            intersect = find_intersection((main_a, main_b, main_c), (a, b, c))
+            if intersect[1] < center[1]:
+                # print("Top")
+                lines_t.append(line)
+            else:
+                # print("Bottom")
+                lines_b.append(line)
+
+    line_l = lines_l[0]
+    line_r = lines_r[0]
+    line_t = lines_t[0]
+    line_b = lines_b[0]
+
+    pt_tl = find_intersection(line_l, line_t)
+    pt_tr = find_intersection(line_r, line_t)
+    pt_bl = find_intersection(line_l, line_b)
+    pt_br = find_intersection(line_r, line_b)
+
+    return pt_tl, pt_tr, pt_br, pt_bl
 
 
 def deform_img_to_card(
@@ -294,7 +399,7 @@ def deform_img_to_card_from_pt(
     return cv2.warpPerspective(img, M, dst_shape)
 
 
-def deform_card(img_file: Image, output_shape: tuple[int, int] = (HIRES_WIDTH, HIRES_HEIGHT)) -> np.ndarray | None:
+def deform_card(img_file: Image, output_shape: tuple[int, int] = (HIRES_WIDTH, HIRES_HEIGHT)) -> np.ndarray:
     """
     From the given image path, tries to find
 
@@ -302,19 +407,36 @@ def deform_card(img_file: Image, output_shape: tuple[int, int] = (HIRES_WIDTH, H
         img_path (str): Path to the image to deform
 
     Returns:
-        np.ndarray | None: Deformed image or None if it fails to find best match
+        np.ndarray: Deformed image or original image if it fails to find best match
     """
-    IMG_SIZE = (512, 512)
-    img = resize_with_fill(cv2.cvtColor(np.array(img_file), cv2.COLOR_BGR2RGB), IMG_SIZE[0], IMG_SIZE[1])
+    # converted_img = np.flip(np.array(img_file).transpose(1, 0, 2), axis=1)
+    converted_img = np.array(img_file)
+    # raw_img = cv2.cvtColor(converted_img, cv2.COLOR_BGR2RGB)
+
+    loaded_shape = converted_img.shape[:2]
+    max_length = max(loaded_shape)
+    MAX_EDGE_LENGTH = 1200
+    edge_scale_ratio = MAX_EDGE_LENGTH / max_length
+    IMG_SIZE = (int(loaded_shape[1] * edge_scale_ratio), int(loaded_shape[0] * edge_scale_ratio))
+    # img = resize_with_fill(cv2.cvtColor(np.array(img_file), cv2.COLOR_BGR2RGB), IMG_SIZE[0], IMG_SIZE[1])
+    # img = cv2.resize(cv2.cvtColor(converted_img, cv2.COLOR_BGR2RGB), IMG_SIZE[0], IMG_SIZE[1])
+    img = cv2.resize(converted_img, IMG_SIZE)
     img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-    # blurred_rgb = cv2.GaussianBlur(img, (9, 9), 0)
+    blurred_rgb = cv2.GaussianBlur(img, (9, 9), 0)
     blurred_hsv = cv2.GaussianBlur(img_hsv, (9, 9), 0)
 
-    alpha = 1.3
-    beta = -20
+    alpha = 1.4
+    beta = -40
+    img_r = apply_contrast(blurred_rgb[:, :, 0], alpha=alpha, beta=beta)
+    img_g = apply_contrast(blurred_rgb[:, :, 1], alpha=alpha, beta=beta)
+    img_b = apply_contrast(blurred_rgb[:, :, 2], alpha=alpha, beta=beta)
     img_h = apply_contrast(blurred_hsv[:, :, 0], alpha=alpha, beta=beta)
     img_s = apply_contrast(blurred_hsv[:, :, 1], alpha=alpha, beta=beta)
     img_v = apply_contrast(blurred_hsv[:, :, 2], alpha=alpha, beta=beta)
+    edge_mono = cv2.cvtColor(mono_grad(blurred_rgb, 3), cv2.COLOR_BGR2GRAY)
+    edger = cv2.Canny(img_r, 50, 100)
+    edgeg = cv2.Canny(img_g, 50, 100)
+    edgeb = cv2.Canny(img_b, 50, 100)
     edge1 = cv2.Canny(img_h, 50, 100)
     edge2 = cv2.Canny(img_s, 50, 100)
     edge3 = cv2.Canny(img_v, 50, 100)
@@ -322,27 +444,46 @@ def deform_card(img_file: Image, output_shape: tuple[int, int] = (HIRES_WIDTH, H
 
     # contours, hierarchy = cv2.findContours(edge_all, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
     contours_all = []
+    contours, hierarchy = cv2.findContours(edger, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
+    contours_all.extend(list(remove_short_long_contours(contours, IMG_SIZE, min_length=300)))
+    contours, hierarchy = cv2.findContours(edgeg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
+    contours_all.extend(list(remove_short_long_contours(contours, IMG_SIZE, min_length=300)))
+    contours, hierarchy = cv2.findContours(edgeb, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
+    contours_all.extend(list(remove_short_long_contours(contours, IMG_SIZE, min_length=300)))
     contours, hierarchy = cv2.findContours(edge1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
-    contours_all.extend(list(contours))
+    contours_all.extend(list(remove_short_long_contours(contours, IMG_SIZE, min_length=300)))
     contours, hierarchy = cv2.findContours(edge2, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
-    contours_all.extend(list(contours))
+    contours_all.extend(list(remove_short_long_contours(contours, IMG_SIZE, min_length=300)))
     contours, hierarchy = cv2.findContours(edge3, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
-    contours_all.extend(list(contours))
+    contours_all.extend(list(remove_short_long_contours(contours, IMG_SIZE, min_length=300)))
+    contours, hierarchy = cv2.findContours(edge_mono, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_KCOS)
+    contours_all.extend(list(remove_short_long_contours(contours, IMG_SIZE, min_length=300)))
 
-    cnt_smoothed = smooth_contours(contours_all, epsilon=1)
-    cnt_smoothed_cleaned = remove_short_long_contours(cnt_smoothed)
-    found_contours = find_rectangle_contours(cnt_smoothed_cleaned, base_contour)
+    cnt_smoothed = smooth_contours(contours_all)
+    # cnt_smoothed_cleaned = remove_short_long_contours(cnt_smoothed)
+    found_contours = find_rectangle_contours(cnt_smoothed, base_contour, threshold=0.3)
     if not len(found_contours) > 0:
         logger.warning("No contour was found. Exiting.")
-        return None
+        return cv2.resize(converted_img, output_shape)
 
     best_fit_contour = found_contours[0][0]
+    best_fit_contour = reset_orientation(best_fit_contour)
     # best_fit_contour_convex = cv2.convexHull(best_fit_contour)
     best_fit_contour = remove_flat_points(best_fit_contour, threshold=2)
-    best_fit_contour = get_corners_from_contour(best_fit_contour)
-    best_fit_contour = reset_orientation(best_fit_contour)
-    raw_img = cv2.cvtColor(np.array(img_file), cv2.COLOR_BGR2RGB)
-    return deform_img_to_card(raw_img, best_fit_contour, dst_shape=output_shape)
+    best_fit_contour = remove_protrude(img, best_fit_contour)
+
+    contour_image = np.zeros_like(img[:, :, 0])
+    cv2.drawContours(contour_image, [best_fit_contour], -1, (255), 1)
+    lines = cv2.HoughLines(contour_image, 1, np.pi / 180, 100)
+    new_lines = calc_lines(lines)
+    pts = get_corners_from_lines(new_lines, best_fit_contour)
+
+    # best_fit_contour = get_corners_from_contour(best_fit_contour)
+    # best_fit_contour = reset_orientation(best_fit_contour)
+
+    return deform_img_to_card_from_pt(img, pts, IMG_SIZE, dst_shape=output_shape)
+    return img, new_lines
+    return contour_image
 
 
 # if __name__ == "__main__":
