@@ -5,6 +5,7 @@ import cv2
 import pickle
 from pathlib import Path
 import logging
+from PIL import Image
 from pokedex import HIRES_HEIGHT, HIRES_WIDTH
 
 # from draw import show_color
@@ -224,7 +225,7 @@ def deform_img_to_card(
     return cv2.warpPerspective(img, M, dst_shape)
 
 
-def deform_card(img_path: str, output_shape: tuple[int, int] = (HIRES_WIDTH, HIRES_HEIGHT)) -> np.ndarray | None:
+def deform_card(img_file: Image, output_shape: tuple[int, int] = (HIRES_WIDTH, HIRES_HEIGHT)) -> np.ndarray | None:
     """
     From the given image path, tries to find
 
@@ -235,7 +236,7 @@ def deform_card(img_path: str, output_shape: tuple[int, int] = (HIRES_WIDTH, HIR
         np.ndarray | None: Deformed image or None if it fails to find best match
     """
     IMG_SIZE = (512, 512)
-    img = resize_with_fill(cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB), IMG_SIZE[0], IMG_SIZE[1])
+    img = resize_with_fill(cv2.cvtColor(np.array(img_file), cv2.COLOR_BGR2RGB), IMG_SIZE[0], IMG_SIZE[1])
     img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
     # blurred_rgb = cv2.GaussianBlur(img, (9, 9), 0)
     blurred_hsv = cv2.GaussianBlur(img_hsv, (9, 9), 0)
@@ -271,7 +272,7 @@ def deform_card(img_path: str, output_shape: tuple[int, int] = (HIRES_WIDTH, HIR
     best_fit_contour = remove_flat_points(best_fit_contour, threshold=2)
     best_fit_contour = get_corners_from_contour(best_fit_contour)
     best_fit_contour = reset_orientation(best_fit_contour)
-    raw_img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
+    raw_img = cv2.cvtColor(np.array(img_file), cv2.COLOR_BGR2RGB)
     return deform_img_to_card(raw_img, best_fit_contour, dst_shape=output_shape)
 
 
