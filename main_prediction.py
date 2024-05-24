@@ -1,5 +1,6 @@
-from pokedex.prediction import card_prediction_processing, card_ocr_crop
+from pokedex.prediction import card_prediction_processing, card_ocr_crop, get_card_info
 from pokedex.edges.deformer import deform_card
+from pokedex.text_detection import get_pokeid
 
 import numpy as np
 
@@ -8,10 +9,12 @@ import numpy as np
 photo_path = '../../raw_data/PokemonCards/xy1-94.jpg'
 
 # Process photo to detect edges and cut corners
-card_image = deform_card(photo_path)
+card_image = deform_card(photo_path) # outputs a card with (HIRES_HEIGHT, HIRES_WIDTH) size
 
 
 ## ---- SET ID ---- ##
+# resize card to (INITIAL_WIDTH, INITIAL_HEIGHT)
+# crops the corners and grayscale
 graybottomleft, graybottomright = card_prediction_processing(card_image)
 
 # Predict the set id for each corner
@@ -37,14 +40,13 @@ elif set_left == 'no':
 
 
 ## ---- NUMBER ID ---- ##
-# OCR on high res picture
+# Input is HIGH RES picture
+# Crops the bottome corners
 bottomcorner = card_ocr_crop(card_image, set_id)
-# -- add OCR model -- #
+# OCR reads corner number #
+im_text = get_pokeid(bottomcorner,set_id)
 
-poke_id
-
-
+# im_text cleaning
 
 ## ---- API call ---- ##
-set_id
-poke_id
+(rarity, market_price, image_url) = get_card_info(set_id, poke_id)

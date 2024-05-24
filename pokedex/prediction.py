@@ -1,7 +1,8 @@
 from pokedex import HARD_CODED_WIDTH, HARD_CODED_HEIGHT, INITIAL_HEIGHT, INITIAL_WIDTH
-from pokedex import SETINFO
+from pokedex import SETINFO, RATIO
 import cv2
 import numpy as np
+import requests
 
 
 def card_prediction_processing(card):
@@ -40,8 +41,27 @@ def card_ocr_crop(card, set_id):
 
     h, w, d = card.shape
     if side == 'left':
-        bottomleft = card[h-HARD_CODED_HEIGHT*3:, :HARD_CODED_WIDTH*3, :]
+        bottomleft = card[h-HARD_CODED_HEIGHT*RATIO:, :HARD_CODED_WIDTH*RATIO, :]
         return bottomleft
     elif side == 'right':
-        bottomright = card[h-HARD_CODED_HEIGHT*3:, w-HARD_CODED_WIDTH*3:, :]
+        bottomright = card[h-HARD_CODED_HEIGHT*RATIO:, w-HARD_CODED_WIDTH*RATIO:, :]
         return bottomright
+
+
+def get_card_info(set_id, poke_id):
+    url = f'https://api.pokemontcg.io/v2/cards/{set_id}-{str(poke_id)}'
+    response = requests.get(url)
+    if response.status_code == 200:
+        result = response.json()
+
+        rarity = result['data']['rarity']
+        market_price = result['data']['cardmarket']['prices']['averageSellPrice']
+        image_url = result['data']['images']['large']
+
+        print(rarity)
+        print(market_price)
+        print(image_url)
+        return rarity, market_price, image_url
+    else:
+        print(f"Failed to retrieve info. HTTP Status code: {response.status_code}")
+        return None
