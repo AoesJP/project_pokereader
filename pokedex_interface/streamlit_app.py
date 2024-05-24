@@ -1,10 +1,9 @@
 import streamlit as st
 
-import numpy as np
-
+import requests
 from PIL import Image
 from io import BytesIO
-import cv2
+import base64
 
 from app_utils import get_logo
 from pokedex.edges.deformer import deform_card
@@ -45,13 +44,23 @@ else:
 card_image = deform_card(image)
 columns[1].image(card_image, caption='Cut Image.', use_column_width=True)
 
-### ---------- ###
-# SEND card_image TO THE API
-# API RETURNS set_id and poke_id
+### ----- MODEL API REQUEST ----- ###
+if st.button("Predict") and card_image is not None:
+    encoded_image = base64.b64encode(card_image).decode("utf-8")
+    response = requests.post("http://localhost:8000/predict", json={"image": encoded_image})
+
+    if response.status_code == 200:
+        set_id = response.json()["set_id"]
+        poke_id = response.json()["poke_id"]
+        st.success(f"Set ID: {set_id}, Poke ID: {poke_id}")
+    else:
+        st.error("Failed to get prediction")
 ### ---------- ###
 
+# USE THOSE ONES WHILE THE API IS NOT UP
 set_id = 'swsh10'
 poke_id = 8
+
 
 # Get the info about the card!
 rarity, market_price, image_url = get_card_info(set_id, poke_id)
