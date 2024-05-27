@@ -54,6 +54,7 @@ poke_id = 100
 
 # edge detection
 edge_detection = False
+
 if uploaded == True:
     try:
         card_image = deform_card(image)
@@ -62,17 +63,18 @@ if uploaded == True:
     except:
         "We could not recognize your card. Please try to upload another image."
 
-# ### ----- MODEL API REQUEST ----- ###
-# if st.button("Predict") and card_image is not None:
-#     encoded_image = base64.b64encode(card_image).decode("utf-8")
-#     response = requests.post("http://localhost:8000/predict", json={"image": encoded_image})
 
-#     if response.status_code == 200:
-#         set_id = response.json()["set_id"]
-#         poke_id = response.json()["poke_id"]
-#         st.success(f"Set ID: {set_id}, Poke ID: {poke_id}")
-#     else:
-#         st.error("Failed to get prediction")
+# ### ----- MODEL API REQUEST ----- ###
+if st.button("Predict") and card_image is not None:
+    encoded_image = base64.b64encode(card_image).decode("utf-8")
+    response = requests.post("http://localhost:8000/predict", json={"image": encoded_image})
+
+    if response.status_code == 200:
+        set_id = response.json()["set_id"]
+        poke_id = response.json()["poke_id"]
+        st.success(f"Set ID: {set_id}, Poke ID: {poke_id}")
+    else:
+        st.error("Failed to get prediction")
 ### ---------- ###
 
 # USE THOSE ONES WHILE THE API IS NOT UP
