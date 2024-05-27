@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: project-pokereader
+Version: 1.0.0
+Summary: A comprehensive Python package for machine learning model deployment with Streamlit, Docker, FastAPI, and Google Cloud Platform (GCP).
+Author: Yuri, Estelle, Emilia, Alex
+Author-email: alex.tm.chiu@gmail.com
+Description-Content-Type: text/markdown
+
+Readme
