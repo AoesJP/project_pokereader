@@ -10,7 +10,7 @@ def encode_image(image_path):
 
 # Streamlit UI
 def main():
-    st.title("Machine Learning Prediction")
+    st.title("PokeReader card prediction")
     image_path = st.file_uploader("Upload an image", type=["jpg"])
     if st.button("Predict") and image_path is not None:
         encoded_image = encode_image(image_path)
