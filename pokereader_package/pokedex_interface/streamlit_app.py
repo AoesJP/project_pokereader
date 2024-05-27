@@ -6,7 +6,7 @@ from PIL import Image
 from io import BytesIO
 import base64
 
-from app_utils import get_logo,show_rarity
+from app_utils import get_logo,show_rarity,rarity_emoji,price_hype
 from pokedex.edges.deformer import deform_card
 from pokedex import INITIAL_HEIGHT,INITIAL_WIDTH
 from pokedex.prediction import get_card_info
@@ -21,8 +21,6 @@ st.set_page_config(
 logo = get_logo()
 st.image(logo)
 
-
-
 # Camera input
 uploaded_file = st.camera_input("Take a pic of a Pokemon card!")
 # st.write(type(pic))
@@ -31,18 +29,17 @@ uploaded_file = st.camera_input("Take a pic of a Pokemon card!")
 # uploaded_file = st.file_uploader("### Upload your image here ... ", type=['jpg', 'jpeg', 'png'])
 
 # Displaying the card pic
-columns = st.columns(2)
+#columns = st.columns(2)
 # columns[0].image(pic)
 
-uploaded = True
+uploaded = False
 if uploaded_file is not None:
     bytes_data = uploaded_file.getvalue()
     if bytes_data:
         try:
             image = Image.open(BytesIO(bytes_data))
-            columns[0].image(image, caption='Uploaded Image.', use_column_width=True)
+            #columns[0].image(image, caption='Uploaded Image.', use_column_width=True)
             uploaded = True
-            st.write("Test test")
         except IOError:
             st.error("Cannot identify image file. Please check the file format and try again.")
         except Exception as e:
@@ -52,13 +49,18 @@ if uploaded_file is not None:
 else:
     st.warning("Please upload an image file.")
 
-# edge detection
-if uploaded == True:
-    card_image = deform_card(image)
-    columns[1].image(card_image, caption='Cut Image.', use_column_width=True)
+set_id = 'xy2'
+poke_id = 100
 
-set_id = 'swsh10'
-poke_id = 300
+# edge detection
+edge_detection = False
+if uploaded == True:
+    try:
+        card_image = deform_card(image)
+        st.image(card_image, caption='Cut Image.', use_column_width=True)
+        edge_detection = True
+    except:
+        "We could not recognize your card. Please try to upload another image."
 
 # ### ----- MODEL API REQUEST ----- ###
 # if st.button("Predict") and card_image is not None:
@@ -75,41 +77,43 @@ poke_id = 300
 
 # USE THOSE ONES WHILE THE API IS NOT UP
 
+correct_card = False
+if edge_detection == True:
+    # Get the info about the card!
+    # rarity, market_price, image_url = get_card_info(set_id, poke_id)
+    rarity, market_price, image_url = get_card_info(set_id, poke_id)
+
+    # Create a dropdown menu with options 'Yes' and 'No'
+    user_input = st.radio('## Is this the correct card?', ('Absolutely :)', 'Not Quite :('))
+    if user_input == 'Not Quite :(':
+        st.write("Please try uploading another pic... Sorry!")
+    elif user_input == 'Absolutely :)':
+        correct_card = True
+    left_co, cent_co,last_co = st.columns(3)
+    with cent_co:
+        st.image(image_url,use_column_width=True)
 
 
-# Get the info about the card!
-# rarity, market_price, image_url = get_card_info(set_id, poke_id)
-rarity, market_price, image_url = get_card_info(set_id, poke_id)
-
-st.image(image_url)
-
-if st.button('click me'):
-    # print is visible in the server output, not in the page
-    print('button clicked!')
-    st.write('I was clicked 🎉')
-    st.write('Further clicks are not visible but are executed')
-else:
-    st.write('I was not clicked 😞')
-
-#show_rarity(rarity)
-
-
-# Define your CSS styles
-st.markdown("""
-<style>
-.big-red {
-    font-size: 25px;
-    font-weight: bold;
-    color: #FF0000;  # Red color
-}
-.right-align {
-    text-align: right;
-}
-</style>
-""", unsafe_allow_html=True)
-# Use the styles in your Markdown
-st.markdown("## Your pokemon card has rarity of...")
-st.markdown(f"""<h2 class='right-align'>...{rarity.capitalize()}!!!!</h2>""", unsafe_allow_html=True)
-
-st.markdown(f"""<h3 class='general-text'>Trading at <span class='market-price'>{market_price}</span> USD today!</h3>""", unsafe_allow_html=True)
-# Printing the image
+if correct_card == True and edge_detection == True:
+    # Display the API pokemon card
+    # left_co, cent_co,last_co = st.columns(3)
+    # with cent_co:
+    #     st.image(image_url,use_column_width=True)
+        st.markdown("""
+        <style>
+        .big-red {
+            font-size: 25px;
+            font-weight: bold;
+            color: #FF0000;  # Red color
+        }
+        .right-align {
+            text-align: right;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        # Use the styles in your Markdown
+        emoji = rarity_emoji(rarity)
+        price_emoji = price_hype(market_price)
+        st.markdown(f"## Your pokemon card has rarity of...{rarity.upper()} {emoji}")
+        st.markdown(f"## It is worth ${market_price} today {price_emoji}")
+        show_rarity(rarity)
