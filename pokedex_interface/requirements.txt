@@ -16,7 +16,6 @@ jupyterlab_server==2.27.1
 matplotlib==3.9.0
 matplotlib-inline==0.1.7
 numpy==1.26.4
-opencv-python==4.9.0.80
 pandas==2.2.2
 pip==24.0
 pylint==3.2.1
