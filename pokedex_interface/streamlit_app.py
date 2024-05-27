@@ -8,7 +8,7 @@ import base64
 
 from app_utils import get_logo
 from pokedex.edges.deformer import deform_card
-from pokedex import INITIAL_HEIGHT, INITIAL_WIDTH
+from pokedex import INITIAL_HEIGHT,INITIAL_WIDTH
 from pokedex.prediction import get_card_info
 
 st.set_page_config(
