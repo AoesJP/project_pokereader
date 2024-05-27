@@ -53,6 +53,7 @@ else:
     st.warning("Please upload an image file.")
 
 # edge detection
+
 if uploaded == True:
     card_image = deform_card(image)
     columns[1].image(card_image, caption='Cut Image.', use_column_width=True)
@@ -60,17 +61,18 @@ if uploaded == True:
 set_id = 'swsh10'
 poke_id = 300
 
-# ### ----- MODEL API REQUEST ----- ###
-# if st.button("Predict") and card_image is not None:
-#     encoded_image = base64.b64encode(card_image).decode("utf-8")
-#     response = requests.post("http://localhost:8000/predict", json={"image": encoded_image})
 
-#     if response.status_code == 200:
-#         set_id = response.json()["set_id"]
-#         poke_id = response.json()["poke_id"]
-#         st.success(f"Set ID: {set_id}, Poke ID: {poke_id}")
-#     else:
-#         st.error("Failed to get prediction")
+# ### ----- MODEL API REQUEST ----- ###
+if st.button("Predict") and card_image is not None:
+    encoded_image = base64.b64encode(card_image).decode("utf-8")
+    response = requests.post("http://localhost:8000/predict", json={"image": encoded_image})
+
+    if response.status_code == 200:
+        set_id = response.json()["set_id"]
+        poke_id = response.json()["poke_id"]
+        st.success(f"Set ID: {set_id}, Poke ID: {poke_id}")
+    else:
+        st.error("Failed to get prediction")
 ### ---------- ###
 
 # USE THOSE ONES WHILE THE API IS NOT UP
