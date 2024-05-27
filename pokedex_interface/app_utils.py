@@ -1,9 +1,13 @@
 import cv2
+from pathlib import Path
+
+HERE = Path(__file__).parent
 
 def lol():
     print('lol')
 
-LOGO_PATH = '/Users/aoesjp/code/AoesJP/project_pokereader/pokedex_interface/PokeReader_Logo.png'
+#LOGO_PATH = '/Users/emiliasato/code/AoesJP/project_pokereader/pokedex_interface/PokeReader_Logo.png'
+LOGO_PATH = str(HERE / 'PokeReader_Logo.png')
 
 def get_logo():
     # logo_bgr = cv2.imread('PokeReader_Logo.png')
