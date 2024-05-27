@@ -13,8 +13,8 @@ app = FastAPI()
 app.state.model_left = joblib.load("pokereader_left99.pkl")
 app.state.model_right = joblib.load("pokereader_right99.pkl")
 
-app.state.label_encoder_left
-app.state.label_encoder_right
+app.state.label_encoder_left = np.array(['no', 'sm4', 'sv2', 'sv3', 'sv3pt5', 'sv4', 'swsh10', 'swsh12pt5', 'swsh45', 'swsh6', 'swsh9'], dtype=object)
+app.state.label_encoder_right = np.array(['no', 'sm4', 'sv2', 'sv3', 'sv3pt5', 'sv4', 'swsh10', 'swsh12pt5', 'swsh45', 'swsh6', 'swsh9'], dtype=object)
 
 # Define request/response models
 class Prediction(BaseModel):
