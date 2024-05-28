@@ -69,7 +69,7 @@ def main():
             plt.imsave(buf, card_image, format="png")
             encoded_image_bytes = buf.getvalue()
             file = {"file": encoded_image_bytes}
-            response = requests.post("http://localhost:8200/predict", files=file)
+            response = requests.post("https://poke-api-cloud-instance1-yjefrbroka-an.a.run.app/predict", files=file)
 
             if response.status_code == 200:
                 set_id = response.json()["set_id"]
