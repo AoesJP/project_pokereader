@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='project_pokereader',
-    version='1.0.0',
+    version='1.0.1',
     description='A comprehensive Python package for machine learning model deployment with Streamlit, Docker, FastAPI, and Google Cloud Platform (GCP).',
     author='Yuri, Estelle, Emilia, Alex',
     author_email='alex.tm.chiu@gmail.com',
