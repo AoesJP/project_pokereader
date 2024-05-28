@@ -4,12 +4,10 @@ import matplotlib.pyplot as plt
 import requests
 from PIL import Image
 from io import BytesIO
-import base64
 
-from interface.app_utils import get_logo,show_rarity,rarity_emoji,price_hype
+from interface.app_utils import get_logo,show_rarity,rarity_emoji,price_hype,get_teamrocket
 
 from pokedex.edges.deformer import deform_card
-from pokedex import INITIAL_HEIGHT,INITIAL_WIDTH
 from pokedex.prediction import get_card_info
 
 
@@ -95,7 +93,7 @@ def main():
                 st.write('Pokemon card number could not be retrieved.')
                 poke_id = st.number_input('Please input Pokemon card by hand:', step=1, placeholder="Pokemon card number...")
 
-                st.write("Poke ID is", poke_id)
+                st.write("Poke ID is now ", poke_id)
 
             if poke_id != "" and poke_id != 0:
                 rarity, market_price, image_url = get_card_info(set_id, int(poke_id))
@@ -104,11 +102,15 @@ def main():
                 user_input = st.radio('## Is this the correct card?', ('Absolutely :)', 'Not Quite :('))
                 if user_input == 'Not Quite :(':
                     st.write("Please try uploading another pic... Sorry!")
+                    team_rocket = get_teamrocket()
+                    left_co, cent_co,last_co = st.columns(3)
+                    with cent_co:
+                        st.image(team_rocket,use_column_width=True)
                 elif user_input == 'Absolutely :)':
                     correct_card = True
-                left_co, cent_co,last_co = st.columns(3)
-                with cent_co:
-                    st.image(image_url,use_column_width=True)
+                    left_co, cent_co,last_co = st.columns(3)
+                    with cent_co:
+                        st.image(image_url,use_column_width=True)
 
         if correct_card == True and edge_detection == True:
         # Display the API pokemon card
