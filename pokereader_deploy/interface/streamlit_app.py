@@ -60,66 +60,76 @@ def main():
         except:
             "We could not recognize your card. Please try to upload another image."
 
-    # USE THOSE ONES WHILE THE API IS NOT UP
-    #set_id = 'xy1'
-    #poke_id = 100
+        # USE THOSE ONES WHILE THE API IS NOT UP
+        #set_id = 'xy1'
+        #poke_id = 100
 
-    # # ### ----- MODEL API REQUEST ----- ###
-    predicted = False
-    if st.button("Predict") and card_image is not None:
-        buf = BytesIO()
-        plt.imsave(buf, card_image, format="png")
-        encoded_image_bytes = buf.getvalue()
-        file = {"file": encoded_image_bytes}
-        response = requests.post("http://localhost:8200/predict", files=file)
+        ### ----- MODEL API REQUEST ----- ###
+        predicted = False
+        if card_image is not None:
+            buf = BytesIO()
+            plt.imsave(buf, card_image, format="png")
+            encoded_image_bytes = buf.getvalue()
+            file = {"file": encoded_image_bytes}
+            response = requests.post("http://localhost:8200/predict", files=file)
 
-        if response.status_code == 200:
-            set_id = response.json()["set_id"]
-            poke_id = response.json()["poke_id"]
-            st.success(f"Set ID: {set_id}, Poke ID: {poke_id}")
-            predicted = True
-        if response.status_code == 404:
-            st.error("testing this error message")
-        else:
-            st.error("Failed to get prediction")
-    # ### ---------- ###
+            if response.status_code == 200:
+                set_id = response.json()["set_id"]
+                poke_id = response.json()["poke_id"]
+                st.success(f"Set ID: {set_id}, Poke ID: {poke_id}")
+                predicted = True
+            else:
+                st.error("Failed to get prediction")
+        ### ---------- ###
 
-    correct_card = False
-    if edge_detection == True and predicted == True:
-        # Get the info about the card!
-        # rarity, market_price, image_url = get_card_info(set_id, poke_id)
-        rarity, market_price, image_url = get_card_info(set_id, poke_id)
+        # if poke_id == "":
+        #     st.write('Pokemon card number could not be retrieved.')
+        #     poke_id = st.number_input('Please input Pokemon card by hand:', step=1, placeholder="Pokemon card number...")
 
-        # Create a dropdown menu with options 'Yes' and 'No'
-        user_input = st.radio('## Is this the correct card?', ('Absolutely :)', 'Not Quite :('))
-        if user_input == 'Not Quite :(':
-            st.write("Please try uploading another pic... Sorry!")
-        elif user_input == 'Absolutely :)':
-            correct_card = True
-        left_co, cent_co,last_co = st.columns(3)
-        with cent_co:
-            st.image(image_url,use_column_width=True)
+        #     st.write("Poke ID is ", poke_id)
 
-    if correct_card == True and edge_detection == True:
-    # Display the API pokemon card
-    # left_co, cent_co,last_co = st.columns(3)
-    # with cent_co:
-    #     st.image(image_url,use_column_width=True)
-        st.markdown("""
-        <style>
-        .big-red {
-            font-size: 25px;
-            font-weight: bold;
-            color: #FF0000;  # Red color
-        }
-        .right-align {
-            text-align: right;
-        }
-        </style>
-        """, unsafe_allow_html=True)
-        # Use the styles in your Markdown
-        emoji = rarity_emoji(rarity)
-        price_emoji = price_hype(market_price)
-        st.markdown(f"## Your pokemon card has rarity of...{rarity.upper()} {emoji}")
-        st.markdown(f"## It is worth ${market_price} today {price_emoji}")
-        show_rarity(rarity)
+        correct_card = False
+        if edge_detection == True and predicted == True:
+            # Get the info about the card!
+            if poke_id == "":
+                st.write('Pokemon card number could not be retrieved.')
+                poke_id = st.number_input('Please input Pokemon card by hand:', step=1, placeholder="Pokemon card number...")
+
+                st.write("Poke ID is", poke_id)
+
+            if poke_id != "" and poke_id != 0:
+                rarity, market_price, image_url = get_card_info(set_id, int(poke_id))
+
+                # Create a dropdown menu with options 'Yes' and 'No'
+                user_input = st.radio('## Is this the correct card?', ('Absolutely :)', 'Not Quite :('))
+                if user_input == 'Not Quite :(':
+                    st.write("Please try uploading another pic... Sorry!")
+                elif user_input == 'Absolutely :)':
+                    correct_card = True
+                left_co, cent_co,last_co = st.columns(3)
+                with cent_co:
+                    st.image(image_url,use_column_width=True)
+
+        if correct_card == True and edge_detection == True:
+        # Display the API pokemon card
+        # left_co, cent_co,last_co = st.columns(3)
+        # with cent_co:
+        #     st.image(image_url,use_column_width=True)
+            st.markdown("""
+            <style>
+            .big-red {
+                font-size: 25px;
+                font-weight: bold;
+                color: #FF0000;  # Red color
+            }
+            .right-align {
+                text-align: right;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+            # Use the styles in your Markdown
+            emoji = rarity_emoji(rarity)
+            price_emoji = price_hype(market_price)
+            st.markdown(f"## Your pokemon card has rarity of...{rarity.upper()} {emoji}")
+            st.markdown(f"## It is worth ${market_price} today {price_emoji}")
+            show_rarity(rarity)
