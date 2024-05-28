@@ -5,7 +5,7 @@ import requests
 from PIL import Image
 from io import BytesIO
 
-from interface.app_utils import get_logo,show_rarity,rarity_emoji,price_hype,get_teamrocket
+from interface.app_utils import get_logo,show_rarity,rarity_emoji,price_hype,get_teamrocket,get_corners
 
 from pokedex.edges.deformer import deform_card
 from pokedex.prediction import get_card_info
@@ -38,7 +38,7 @@ def main():
             try:
                 image = Image.open(BytesIO(bytes_data))
                 #columns[0].image(image, caption='Uploaded Image.', use_column_width=True)
-                st.image(image, caption='Uploaded Image.', use_column_width=True)
+                # st.image(image, caption='Uploaded Image.', use_column_width=True)
                 uploaded = True
             except IOError:
                 st.error("Cannot identify image file. Please check the file format and try again.")
@@ -47,20 +47,15 @@ def main():
         else:
             st.warning("Uploaded file is empty. Please upload a valid image file.")
 
-
     # edge detection
     edge_detection = False
     if uploaded == True:
         try:
             card_image = deform_card(image)
-            st.image(card_image, caption='Cut Image.', use_column_width=True)
+            st.image(card_image, use_column_width=True) # caption='Cut Image.'
             edge_detection = True
         except:
             "We could not recognize your card. Please try to upload another image."
-
-        # USE THOSE ONES WHILE THE API IS NOT UP
-        #set_id = 'xy1'
-        #poke_id = 100
 
         ### ----- MODEL API REQUEST ----- ###
         predicted = False
@@ -80,20 +75,14 @@ def main():
                 st.error("Failed to get prediction")
         ### ---------- ###
 
-        # if poke_id == "":
-        #     st.write('Pokemon card number could not be retrieved.')
-        #     poke_id = st.number_input('Please input Pokemon card by hand:', step=1, placeholder="Pokemon card number...")
-
-        #     st.write("Poke ID is ", poke_id)
-
         correct_card = False
         if edge_detection == True and predicted == True:
             # Get the info about the card!
             if poke_id == "":
-                st.write('Pokemon card number could not be retrieved.')
-                poke_id = st.number_input('Please input Pokemon card by hand:', step=1, placeholder="Pokemon card number...")
-
-                st.write("Poke ID is now ", poke_id)
+                st.write('Poke ID could not be retrieved.')
+                imcorners = get_corners()
+                st.image(imcorners, use_column_width=True)
+                poke_id = st.number_input('Please input Poke ID by hand as shown above:', step=1, placeholder="Poke ID...")
 
             if poke_id != "" and poke_id != 0:
                 rarity, market_price, image_url = get_card_info(set_id, int(poke_id))
@@ -105,18 +94,15 @@ def main():
                     team_rocket = get_teamrocket()
                     left_co, cent_co,last_co = st.columns(3)
                     with cent_co:
-                        st.image(team_rocket,use_column_width=True)
+                        st.image(team_rocket, use_column_width=True)
                 elif user_input == 'Absolutely :)':
                     correct_card = True
                     left_co, cent_co,last_co = st.columns(3)
                     with cent_co:
-                        st.image(image_url,use_column_width=True)
+                        st.image(image_url, use_column_width=True)
 
         if correct_card == True and edge_detection == True:
         # Display the API pokemon card
-        # left_co, cent_co,last_co = st.columns(3)
-        # with cent_co:
-        #     st.image(image_url,use_column_width=True)
             st.markdown("""
             <style>
             .big-red {
