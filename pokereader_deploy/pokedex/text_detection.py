@@ -26,7 +26,7 @@ def get_id_coords(set_id):
     elif set_id in ('swsh9', 'swsh6', 'swsh12pt5', 'swsh10','swsh45'):
         id_coord = (280, 75, 540, 125) # checked
     elif set_id == 'sm4':
-        id_coord = (200, 70, 470, 90) # checked
+        id_coord = (200, 70, 365, 90) # checked
 
     # right sets
     elif set_id in ('dv1', 'g1'):
@@ -73,7 +73,6 @@ def ocr_text(img):
     img = preproc_clean(img).squeeze()
     tools = pyocr.get_available_tools()
     tool = tools[0]
-    print(tool)
 
     builder = pyocr.builders.TextBuilder(tesseract_layout=6)
     # builder.tesseract_configs.append("digits")
@@ -176,11 +175,7 @@ def clean_pokeid(pokeid,set_id):
 def get_pokeid(img,set_id):
     """Returns pokemon card number written on the corner"""
     preprocessed_img = ocr_preprocessor(img,set_id)
-    # np.set_printoptions(threshold=np.inf)
-    # print(np.array(preprocessed_img))
-    plt.imsave('19.png',preprocessed_img)
     pokeid = ocr_text(preprocessed_img)
-    print(pokeid)
     pokeid_cleaned = clean_pokeid(pokeid,set_id)
-    print(pokeid_cleaned)
+
     return pokeid_cleaned
