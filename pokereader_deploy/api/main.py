@@ -2,12 +2,12 @@ from fastapi import FastAPI, HTTPException, UploadFile, File
 import joblib
 from pydantic import BaseModel
 import os
-# from .encoding_image import image_encode
-import cv2
+
 from PIL import Image
 import io
 
 import numpy as np
+import tensorflow
 
 from pokedex.prediction import card_prediction_processing, card_ocr_crop
 from pokedex.text_detection import get_pokeid
@@ -51,10 +51,7 @@ async def predict(file: UploadFile = File(...)):
         lel = app.state.label_encoder_left
         ler = app.state.label_encoder_right
         set_left = lel[np.argmax(pred_left)]
-        print(set_left)
         set_right = ler[np.argmax(pred_right)]
-        print(pred_right)
-        print(set_right)
 
         if set_right == 'no' and set_left == 'no':
             print("Please try again!")
@@ -66,12 +63,8 @@ async def predict(file: UploadFile = File(...)):
         elif set_left == 'no':
             set_id = set_right
 
-        print(set_id)
-
         bottomcorner = card_ocr_crop(card_image, set_id)
-        print(bottomcorner.shape)
         poke_id = get_pokeid(bottomcorner, set_id)
-        print(poke_id)
 
         return {"set_id": set_id, "poke_id": poke_id}
 
