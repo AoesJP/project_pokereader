@@ -81,7 +81,8 @@ def main():
             if poke_id == "":
                 st.write('Poke ID could not be retrieved.')
                 imcorners = get_corners()
-                st.image(imcorners, use_column_width=True)
+                co = st.columns(3)
+                co[1].image(imcorners)
                 poke_id = st.number_input('Please input Poke ID by hand as shown above:', step=1, placeholder="Poke ID...")
 
             if poke_id != "" and poke_id != 0:
@@ -93,13 +94,11 @@ def main():
                     st.write("Please try uploading another pic... Sorry!")
                     team_rocket = get_teamrocket()
                     left_co, cent_co,last_co = st.columns(3)
-                    with cent_co:
-                        st.image(team_rocket, use_column_width=True)
+                    cent_co.image(team_rocket)
                 elif user_input == 'Absolutely :)':
                     correct_card = True
                     left_co, cent_co,last_co = st.columns(3)
-                    with cent_co:
-                        st.image(image_url, use_column_width=True)
+                    cent_co.image(image_url)
 
         if correct_card == True and edge_detection == True:
         # Display the API pokemon card
