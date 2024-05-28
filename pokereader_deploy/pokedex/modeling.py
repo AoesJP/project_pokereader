@@ -5,9 +5,7 @@ from sklearn.preprocessing import LabelEncoder
 
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras import models
-# from google.cloud import storage
-# import os
-import glob
+
 
 from pokedex.augmentation import get_augment_data
 from pokedex import HARD_CODED_WIDTH, HARD_CODED_HEIGHT, BUCKET_NAME
