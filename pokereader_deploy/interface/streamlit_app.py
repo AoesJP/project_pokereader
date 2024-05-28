@@ -24,8 +24,6 @@ def main():
     logo = get_logo()
     st.image(logo)
 
-
-
     # Camera input
     uploaded_file = st.camera_input("Take a pic of a Pokemon card!")
     # st.write(type(pic))

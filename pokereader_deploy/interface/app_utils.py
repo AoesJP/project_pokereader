@@ -33,7 +33,7 @@ RARITIES = [
 LOGO_PATH = str(HERE / 'PokeReader_Logo.png')
 
 def lol():
-    '''functino to print lol'''
+    '''functino to print lol!'''
     print('lol')
 
 def get_logo():
