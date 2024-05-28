@@ -33,7 +33,6 @@ async def predict(file: UploadFile = File(...)):
     try:
         contents = await file.read()
         card_image = np.array(Image.open(io.BytesIO(contents)))  # Import io module and use BytesIO to open image
-        print(card_image.shape)
 
         # Perform any necessary preprocessing on the image data
         # cutting the corners
