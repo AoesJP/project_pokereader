@@ -1,5 +1,5 @@
 import streamlit as st
-import cv2
+import matplotlib.pyplot as plt
 
 import requests
 from PIL import Image
@@ -25,14 +25,13 @@ def main():
     st.image(logo)
 
     # Camera input
-    uploaded_file = st.camera_input("Take a pic of a Pokemon card!")
-    # st.write(type(pic))
+    #uploaded_file = st.camera_input("Take a pic of a Pokemon card!")
 
     # User input to upload pic
-    # uploaded_file = st.file_uploader("### Upload your image here ... ", type=['jpg', 'jpeg', 'png'])
+    uploaded_file = st.file_uploader("### Upload a picture of your pokemon card here ... ", type=['jpg', 'jpeg', 'png'])
 
     # Displaying the card pic
-    columns = st.columns(2)
+    #columns = st.columns(2)
 
     uploaded = False
     if uploaded_file is not None:
@@ -41,6 +40,7 @@ def main():
             try:
                 image = Image.open(BytesIO(bytes_data))
                 #columns[0].image(image, caption='Uploaded Image.', use_column_width=True)
+                st.image(image, caption='Uploaded Image.', use_column_width=True)
                 uploaded = True
             except IOError:
                 st.error("Cannot identify image file. Please check the file format and try again.")
@@ -48,8 +48,7 @@ def main():
                 st.error(f"An unexpected error occurred: {e}")
         else:
             st.warning("Uploaded file is empty. Please upload a valid image file.")
-    else:
-        st.warning("Please upload an image file.")
+
 
     # edge detection
     edge_detection = False
@@ -62,24 +61,31 @@ def main():
             "We could not recognize your card. Please try to upload another image."
 
     # USE THOSE ONES WHILE THE API IS NOT UP
-    set_id = 'xy2'
-    poke_id = 100
+    #set_id = 'xy1'
+    #poke_id = 100
 
-    # ### ----- MODEL API REQUEST ----- ###
-    # if st.button("Predict") and card_image is not None:
-    #     encoded_image = base64.b64encode(card_image).decode("utf-8")
-    #     response = requests.post("http://localhost:8000/predict", json={"image": encoded_image})
+    # # ### ----- MODEL API REQUEST ----- ###
+    predicted = False
+    if st.button("Predict") and card_image is not None:
+        buf = BytesIO()
+        plt.imsave(buf, card_image, format="png")
+        encoded_image_bytes = buf.getvalue()
+        file = {"file": encoded_image_bytes}
+        response = requests.post("http://localhost:8200/predict", files=file)
 
-    #     if response.status_code == 200:
-    #         set_id = response.json()["set_id"]
-    #         poke_id = response.json()["poke_id"]
-    #         st.success(f"Set ID: {set_id}, Poke ID: {poke_id}")
-    #     else:
-    #         st.error("Failed to get prediction")
-    ### ---------- ###
+        if response.status_code == 200:
+            set_id = response.json()["set_id"]
+            poke_id = response.json()["poke_id"]
+            st.success(f"Set ID: {set_id}, Poke ID: {poke_id}")
+            predicted = True
+        if response.status_code == 404:
+            st.error("testing this error message")
+        else:
+            st.error("Failed to get prediction")
+    # ### ---------- ###
 
     correct_card = False
-    if edge_detection == True:
+    if edge_detection == True and predicted == True:
         # Get the info about the card!
         # rarity, market_price, image_url = get_card_info(set_id, poke_id)
         rarity, market_price, image_url = get_card_info(set_id, poke_id)
