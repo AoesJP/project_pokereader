@@ -31,24 +31,12 @@ RARITIES = [
 ]
 
 LOGO_PATH = str(HERE / 'PokeReader_Logo.png')
-LOGO_TEAMROCKET = str(HERE / 'Team_Rocket.png')
-LOGO_CORNERS = str(HERE / 'corners.jpeg')
+TEAMROCKET_PATH = str(HERE / 'Team_Rocket.png')
+CORNERS_PATH = str(HERE / 'corners.jpeg')
 
 def lol():
     '''functino to print lol!'''
     print('lol')
-
-def get_teamrocket():
-    rocket_rgba = cv2.imread(LOGO_TEAMROCKET, cv2.IMREAD_UNCHANGED)
-    team_rocket = cv2.cvtColor(rocket_rgba, cv2.COLOR_BGRA2RGBA)
-
-    return team_rocket
-
-def get_corners():
-    corners_rgba = cv2.imread(LOGO_CORNERS, cv2.IMREAD_UNCHANGED)
-    corners = cv2.cvtColor(corners_rgba, cv2.COLOR_BGRA2RGBA)
-
-    return corners
 
 def get_logo():
     '''function to return cropped logo for streamlit UI'''
@@ -59,9 +47,22 @@ def get_logo():
 
     return cropped_logo
 
+def get_corners():
+    corners_rgba = cv2.imread(CORNERS_PATH, cv2.IMREAD_UNCHANGED)
+    corners = cv2.cvtColor(corners_rgba, cv2.COLOR_BGRA2RGBA)
+
+    return corners
+
+def get_teamrocket():
+    rocket_rgba = cv2.imread(TEAMROCKET_PATH, cv2.IMREAD_UNCHANGED)
+    team_rocket = cv2.cvtColor(rocket_rgba, cv2.COLOR_BGRA2RGBA)
+
+    return team_rocket
+
+
 def show_rarity(spotlight_rarity):
     '''function to display rarity of card in colored box'''
-    num_rows = 5
+    num_rows = len(RARITIES)
     num_columns = len(RARITIES) // num_rows + (len(RARITIES) % num_rows > 0)
 
     for row in range(num_rows):
