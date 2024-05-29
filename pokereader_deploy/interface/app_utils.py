@@ -54,7 +54,7 @@ def get_logo():
 
 def show_rarity(spotlight_rarity):
     '''function to display rarity of card in colored box'''
-    num_rows = 5
+    num_rows = len(RARITIES)
     num_columns = len(RARITIES) // num_rows + (len(RARITIES) % num_rows > 0)
 
     for row in range(num_rows):

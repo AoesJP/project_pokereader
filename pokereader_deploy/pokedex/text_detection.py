@@ -26,13 +26,14 @@ def get_id_coords(set_id):
     elif set_id in ('swsh9', 'swsh6', 'swsh12pt5', 'swsh10','swsh45'):
         id_coord = (280, 75, 540, 125) # checked
     elif set_id == 'sm4':
-        id_coord = (200, 70, 365, 90) # checked
+        id_coord = (190, 70, 359, 90) # checked, original (200, 70, 365, 90)
 
     # right sets
     elif set_id in ('dv1', 'g1'):
-        id_coord = (210, 90, 390, 110) # checked
+        id_coord = (210, 85, 380, 110) # checked, original (210, 90, 390, 110)
     elif set_id == 'xy1':
-        id_coord = (150, 90, 340, 110) # checked
+       # id_coord = (150, 90, 340, 110) # checked
+         id_coord = (150, 90, 340, 110) # checked
     elif set_id in ('xy2', 'xy3'):
         id_coord = (150, 90, 335, 110) # checked
     elif set_id in ('xy4', 'xy6', 'xy7'):
