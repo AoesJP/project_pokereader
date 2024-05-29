@@ -6,7 +6,7 @@ from PIL import Image
 from io import BytesIO
 import base64
 
-from interface.app_utils import get_logo, get_teamrocket, get_corners
+from interface.app_utils import get_logo, get_teamrocket, get_corners, SETS
 from interface.app_utils import show_rarity, rarity_emoji, price_hype
 
 from pokedex.edges.deformer import deform_card
@@ -22,17 +22,16 @@ def main():
 
     CSS = """
     .stApp {
-        background-color: #f0f0f0;
         font-family: Helvetica;
     }
-    """
+    """ # background-color: #f0f0f0;
     st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
 
     # Displaying the logo
     logo = get_logo()
     st.image(logo)
 
-    uploaded_file = st.file_uploader(r"$\textsf{\Large Upload a picture of your pokemon card here ... }$", type=['jpg', 'jpeg', 'png'])
+    uploaded_file = st.file_uploader(r"$\textsf{\large Upload a Pokemon card picture...}$", type=['jpg', 'jpeg', 'png'])
 
     uploaded = False
     if uploaded_file is not None:
@@ -60,8 +59,11 @@ def main():
         except:
             st.warning("We could not recognize your card. Please try to upload another image.")
 
-        pikachu = "https://cdnb.artstation.com/p/assets/images/images/055/908/871/original/timothe-muller-pika-running.gif?1668011191"
-        with st.image( pikachu ):
+        pikachu = "https://media.tenor.com/SH31iAEWLT8AAAAi/pikachu-running.gif"
+        # pikachu = "https://cdnb.artstation.com/p/assets/images/images/055/908/871/original/timothe-muller-pika-running.gif?1668011191"
+        co = st.columns(3)
+        with co[1].image(pikachu):
+            # co[1].image( pikachu, use_column_width=True )
             ### ----- MODEL API REQUEST ----- ###
             predicted = False
             if card_image is not None:
@@ -76,7 +78,7 @@ def main():
                 if response.status_code == 200:
                     set_id = response.json()["set_id"]
                     poke_id = response.json()["poke_id"]
-                    st.success(r"$\textsf{\large Set ID: %s, Poke ID: %s}$" % (set_id, poke_id))
+                    st.success("Set name: %s, Poke ID: %s" % (SETS[set_id], poke_id))
                     predicted = True
                 else:
                     st.error("Failed to get prediction")
@@ -86,19 +88,19 @@ def main():
         if edge_detection == True and predicted == True:
             # Get the info about the card!
             if poke_id == "":
-                st.write(r"$\textsf{\large Poke ID could not be retrieved.}$")
+                st.write("Poke ID could not be retrieved.")
                 imcorners = get_corners()
                 co = st.columns(3)
                 co[1].image(imcorners)
-                poke_id = st.number_input(r"$\textsf{\large Please input Poke ID by hand as shown above:}$", step=1, placeholder="Poke ID...")
+                poke_id = st.number_input("Please input Poke ID by hand as shown above:", step=1)
 
             if poke_id != "" and poke_id != 0:
-                rarity, market_price, image_url = get_card_info(st.session_state.set_id, int(poke_id))
+                rarity, market_price, image_url = get_card_info(set_id, int(poke_id))
 
                 # Create a dropdown menu with options 'Yes' and 'No'
-                user_input = st.radio(r"$\textsf{\large Is this the correct card?}$", ('Absolutely :)', 'Not Quite :('))
+                user_input = st.radio("Is this the correct card?", ("Absolutely :)", "Not Quite :("))
                 if user_input == 'Not Quite :(':
-                    st.write(r"$\textsf{\large Please try uploading another pic... Sorry!}$")
+                    st.write("Please try uploading another pic... Sorry!")
                     team_rocket = get_teamrocket()
                     left_co, cent_co,last_co = st.columns(3)
                     cent_co.image(team_rocket)
