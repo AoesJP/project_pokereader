@@ -361,13 +361,14 @@ def deform_img_to_card(
         dtype="float32",
     )
     M = cv2.getPerspectiveTransform(src_points, dst_points)
-    return cv2.warpPerspective(img, M, dst_shape)
+    return cv2.warpPerspective(img, M, dst_shape, flags=cv2.INTER_CUBIC)
 
 
 def deform_img_to_card_from_pt(
     img: np.ndarray,
     pts: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
-    src_shape: tuple[int, int] = (512, 512),
+    # pts_shape: tuple[int, int] = (512, 512),
+    scale_factor: float = 1,
     dst_shape: tuple[int, int] = (HIRES_WIDTH, HIRES_HEIGHT),
 ):
     """
@@ -382,8 +383,7 @@ def deform_img_to_card_from_pt(
     Returns:
         _type_: Deformed image
     """
-
-    src_points = np.array(pts, dtype="float32")
+    src_points = np.array(pts, dtype="float32") / scale_factor
     dst_points = np.array(
         [
             [0, 0],
@@ -486,7 +486,7 @@ def deform_card(img_file: Image, output_shape: tuple[int, int] = (HIRES_WIDTH, H
     # best_fit_contour = get_corners_from_contour(best_fit_contour)
     # best_fit_contour = reset_orientation(best_fit_contour)
 
-    return deform_img_to_card_from_pt(img, pts, IMG_SIZE, dst_shape=output_shape)
+    return deform_img_to_card_from_pt(converted_img, pts, edge_scale_ratio, dst_shape=output_shape)
     return img, new_lines
     return contour_image
 
