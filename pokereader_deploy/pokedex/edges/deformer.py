@@ -325,45 +325,6 @@ def get_corners_from_lines(lines: list[np.ndarray], contour: np.ndarray):
     return pt_tl, pt_tr, pt_br, pt_bl
 
 
-def deform_img_to_card(
-    img: np.ndarray,
-    contour,
-    src_shape: tuple[int, int] = (512, 512),
-    dst_shape: tuple[int, int] = (HIRES_WIDTH, HIRES_HEIGHT),
-):
-    """
-    Deforms image based on given points represent corners
-
-    Args:
-        img (np.ndarray): Image array
-        contour (_type_): ndarray of points, 3 dimentions
-        src_shape (tuple[int, int], optional): Shape of pints. Defaults to (512, 512).
-        dst_shape (tuple[int, int], optional): SHape of out image. Defaults to (HIRES_WIDTH, HIRES_HEIGHT).
-
-    Returns:
-        _type_: Deformed image
-    """
-    img_shape: tuple[int, int] = img.shape[:2]
-    img_offset = (max(img_shape) - min(img_shape)) // 2
-    offset = (img_offset, 0) if img_shape[0] > img_shape[1] else (img_offset, 0)
-    scale_factor = max(img_shape) / max(src_shape)
-
-    src_points = np.squeeze(contour, axis=1).astype("float32") * np.array([scale_factor, scale_factor], dtype="float32") - np.array(
-        offset, dtype="float32"
-    )
-    dst_points = np.array(
-        [
-            [0, 0],
-            [dst_shape[0] - 1, 0],
-            [dst_shape[0] - 1, dst_shape[1] - 1],
-            [0, dst_shape[1] - 1],
-        ],
-        dtype="float32",
-    )
-    M = cv2.getPerspectiveTransform(src_points, dst_points)
-    return cv2.warpPerspective(img, M, dst_shape, flags=cv2.INTER_CUBIC)
-
-
 def deform_img_to_card_from_pt(
     img: np.ndarray,
     pts: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray],
@@ -394,7 +355,7 @@ def deform_img_to_card_from_pt(
         dtype="float32",
     )
     M = cv2.getPerspectiveTransform(src_points, dst_points)
-    return cv2.warpPerspective(img, M, dst_shape)
+    return cv2.warpPerspective(img, M, dst_shape, flags=cv2.INTER_CUBIC)
 
 
 def deform_card(img_file: Image, output_shape: tuple[int, int] = (HIRES_WIDTH, HIRES_HEIGHT)) -> np.ndarray:
