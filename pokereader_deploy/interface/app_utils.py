@@ -30,6 +30,29 @@ RARITIES = [
     "Promo"
 ]
 
+SETS = {
+    'dv1': 'Dragon Vault',
+    'swsh9': 'Brilliant Stars',
+    'swsh45': 'Shining Fates',
+    'swsh6': 'Chilling Reign',
+    'swsh12pt5': 'Crown Zenith',
+    'xy1': 'XY',
+    'xy2': 'Flashfire',
+    'xy3': 'Furious Fists',
+    'g1': 'Generations',
+    'xy4': 'Phantom Forces',
+    'xy6': 'Roaring Skies',
+    'xy7': 'Ancient Origins',
+    'dp1': 'Diamond & Pearl',
+    'dp2': 'Mysterious Treasures',
+    'sm4': 'Crimson Invasion',
+    'swsh10': 'Astral Radiance',
+    'sv4': 'Paradox Rift',
+    'sv3pt5': '151',
+    'sv3': 'Obsidian Flames',
+    'sv2': 'Paldea Evolved'
+    }
+
 LOGO_PATH = str(HERE / 'PokeReader_Logo.png')
 TEAMROCKET_PATH = str(HERE / 'Team_Rocket.png')
 CORNERS_PATH = str(HERE / 'corners.jpeg')
