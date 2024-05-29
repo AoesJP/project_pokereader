@@ -92,7 +92,7 @@ def main():
                 imcorners = get_corners()
                 co = st.columns(3)
                 co[1].image(imcorners)
-                poke_id = st.number_input("Please input Poke ID by hand as shown above:", step=1)
+                poke_id = st.number_input("Please input Poke ID by hand as shown above:", step=1, value=0)
 
             if poke_id != "" and poke_id != 0:
                 rarity, market_price, image_url = get_card_info(set_id, int(poke_id))
