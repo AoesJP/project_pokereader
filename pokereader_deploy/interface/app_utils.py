@@ -32,6 +32,7 @@ RARITIES = [
 
 LOGO_PATH = str(HERE / 'PokeReader_Logo.png')
 LOGO_TEAMROCKET = str(HERE / 'Team_Rocket.png')
+LOGO_CORNERS = str(HERE / 'corners.jpeg')
 
 def lol():
     '''functino to print lol!'''
@@ -42,6 +43,12 @@ def get_teamrocket():
     team_rocket = cv2.cvtColor(rocket_rgba, cv2.COLOR_BGRA2RGBA)
 
     return team_rocket
+
+def get_corners():
+    corners_rgba = cv2.imread(LOGO_CORNERS, cv2.IMREAD_UNCHANGED)
+    corners = cv2.cvtColor(corners_rgba, cv2.COLOR_BGRA2RGBA)
+
+    return corners
 
 def get_logo():
     '''function to return cropped logo for streamlit UI'''

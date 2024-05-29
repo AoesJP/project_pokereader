@@ -32,7 +32,6 @@ def get_id_coords(set_id):
     elif set_id in ('dv1', 'g1'):
         id_coord = (210, 85, 380, 110) # checked, original (210, 90, 390, 110)
     elif set_id == 'xy1':
-       # id_coord = (150, 90, 340, 110) # checked
          id_coord = (150, 90, 340, 110) # checked
     elif set_id in ('xy2', 'xy3'):
         id_coord = (150, 90, 335, 110) # checked
