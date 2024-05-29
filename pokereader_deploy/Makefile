@@ -10,6 +10,9 @@ run_api:
 docker_image:
 	docker build -t ${DOCKER_NAME}:${DOCKER_VERSION} .
 
+docker_image_nc:
+	docker build --no-cache -t ${DOCKER_NAME}:${DOCKER_VERSION} .
+
 docker_push:
 	docker push ${DOCKER_NAME}:${DOCKER_VERSION}
 
