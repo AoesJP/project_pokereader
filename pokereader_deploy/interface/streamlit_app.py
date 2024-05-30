@@ -12,20 +12,12 @@ from interface.app_utils import show_rarity, rarity_emoji, price_hype
 from pokedex.edges.deformer import deform_card
 from pokedex.prediction import get_card_info
 
-
 def main():
     st.set_page_config(
         page_title="Pokereader streamlit", # => Quick reference - Streamlit
         page_icon="🐍",
         layout="wide", # wide
         initial_sidebar_state="auto") # collapsed
-
-    CSS = """
-    .stApp {
-        font-family: Helvetica;
-    }
-    """ # background-color: #f0f0f0;
-    st.write(f'<style>{CSS}</style>', unsafe_allow_html=True)
 
     # Displaying the logo
     logo = get_logo()
@@ -54,7 +46,8 @@ def main():
     if uploaded == True:
         try:
             card_image = deform_card(image)
-            st.image(card_image, use_column_width=True) # caption='Cut Image.'
+            co = st.columns(3)
+            co[1].image(card_image) # caption='Cut Image.'
             edge_detection = True
         except:
             st.warning("We could not recognize your card. Please try to upload another image.")
@@ -126,6 +119,8 @@ def main():
             # Use the styles in your Markdown
             emoji = rarity_emoji(rarity)
             price_emoji = price_hype(market_price)
-            st.markdown(f"## Your pokemon card has rarity of...{rarity.upper()} {emoji}")
-            st.markdown(f"## It is worth ${market_price} today {price_emoji}")
-            show_rarity(rarity)
+            st.markdown(f"## Card value is ${market_price} today {price_emoji}")
+            st.markdown(f"## Your card is {rarity.upper()} {emoji}")
+
+            if st.checkbox('Display Rarity table'):
+                show_rarity(rarity)

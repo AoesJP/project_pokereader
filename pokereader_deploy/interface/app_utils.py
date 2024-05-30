@@ -61,6 +61,7 @@ def lol():
     '''functino to print lol!'''
     print('lol')
 
+@st.cache_data
 def get_logo():
     '''function to return cropped logo for streamlit UI'''
     logo_rgba = cv2.imread(LOGO_PATH, cv2.IMREAD_UNCHANGED)
@@ -70,18 +71,19 @@ def get_logo():
 
     return cropped_logo
 
+@st.cache_data
 def get_corners():
     corners_rgba = cv2.imread(CORNERS_PATH, cv2.IMREAD_UNCHANGED)
     corners = cv2.cvtColor(corners_rgba, cv2.COLOR_BGRA2RGBA)
 
     return corners
 
+@st.cache_data
 def get_teamrocket():
     rocket_rgba = cv2.imread(TEAMROCKET_PATH, cv2.IMREAD_UNCHANGED)
     team_rocket = cv2.cvtColor(rocket_rgba, cv2.COLOR_BGRA2RGBA)
 
     return team_rocket
-
 
 def show_rarity(spotlight_rarity):
     '''function to display rarity of card in colored box'''
@@ -104,25 +106,25 @@ def show_rarity(spotlight_rarity):
 def rarity_emoji(spotlight_rarity):
     '''function to display different emoji depending on card rarity'''
     if spotlight_rarity in RARITIES[0]:
-        return '💩...'
+        return '💩'
     elif spotlight_rarity in RARITIES[1]:
-        return '🔥!'
+        return '🔥'
     elif spotlight_rarity in RARITIES[2:14]:
-        return '🍾🔥!!'
+        return '🍾🔥'
     elif spotlight_rarity in RARITIES[14]:
-        return '🌈🙌 !!!'
+        return '🌈🙌'
     elif spotlight_rarity in RARITIES[15:-1]:
-        return '💃🕺🙌 !!!!'
+        return '💃🕺🙌'
     elif spotlight_rarity in RARITIES[-1]:
-        return '🎉🎉🎉🙌 !!!!!'
+        return '🎉🎉🎉🙌 '
 
 def price_hype(price):
     '''function to display different emoji depending on card price'''
     if price < 0.5:
-        return "...😭"
+        return "😭"
     elif price < 1:
         return "🫠"
     elif price < 2:
-        return "🤩!!"
+        return "🤩"
     else:
-        return "🤑!!!"
+        return "🤑"
