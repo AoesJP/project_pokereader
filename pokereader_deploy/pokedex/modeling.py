@@ -4,17 +4,22 @@ from sklearn.utils import shuffle
 from sklearn.preprocessing import LabelEncoder
 
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras import models
-
 
 from pokedex.augmentation import get_augment_data
 from pokedex import HARD_CODED_WIDTH, HARD_CODED_HEIGHT, BUCKET_NAME
 
 
-def preprocessing(path):
+def preprocessing(path: str) -> tuple[pd.DataFrame, pd.Series, pd.DataFrame, pd.Series, pd.DataFrame, pd.Series, LabelEncoder]:
     """
-    Preprocess the data to extract x and y, with train, val and test sets
-    path = '../../raw_data/dict_reduceddataset_left.json'
+    After data augmentation
+
+    Preprocess the data to extract X features and Y targets:
+    - Label encoder for set_id (target)
+    - normalizing the bottom corner images (features)
+
+    and split into train, val and test sets
+
+    Returns train, val and test sets + the label encoder to reconvert the target into set names.
     """
     df = get_augment_data(path)
     df = shuffle(df).reset_index(drop=True)
@@ -49,38 +54,3 @@ def preprocessing(path):
     y_test = categories[nb_split2:,:]
 
     return XX_train, y_train, XX_val, y_val, XX_test, y_test, label_encoder
-
-
-def load_model(side):
-
-    # creating label encoder for testing
-    df = pd.read_json('/Users/estelle/code/AoesJP/project_pokereader/raw_data/dict_reduceddataset_right.json')
-    label_encoder = LabelEncoder()
-    label_encoder.fit(df['set_id']) # Fit LabelEncoder to your column
-
-    # client = storage.Client()
-    # blobs = list(client.get_bucket(BUCKET_NAME).list_blobs(prefix="Model"))
-
-    # try:
-    #     latest_blob = max(blobs, key=lambda x: x.updated)
-    #     latest_model_path_to_save = '../raw_data/models/'
-
-    #     latest_blob.download_to_filename(latest_model_path_to_save)
-    #     latest_model = models.load_model(latest_model_path_to_save)
-
-    #     print("✅ Model downloaded from cloud storage")
-
-    #     return latest_model, label_encoder
-
-    # except:
-    #     print(f"\n❌ No model found in GCS bucket {BUCKET_NAME}")
-
-    #     return None
-
-    path = '/Users/estelle/code/AoesJP/project_pokereader/raw_data/models/Models_set_right_slim-19.keras'
-
-    latest_model = models.load_model(path)
-
-    print("✅ Model loaded from local disk")
-
-    return latest_model, label_encoder
