@@ -6,35 +6,43 @@ from PIL import Image
 from io import BytesIO
 import base64
 
-from interface.app_utils import get_logo, get_teamrocket, get_corners, SETS
-from interface.app_utils import show_rarity, rarity_emoji, price_hype
+from interface.app_utils import get_logo, get_teamrocket, get_corners, SETS, show_rarity, rarity_emoji, price_hype
 
 from pokedex.edges.deformer import deform_card
 from pokedex.prediction import get_card_info
 
 
 def main():
+    """
+    Main function for Streamlit app.
+    - Set the page configuration
+    - Display the PokeReader Logo
+    - Ask user to upload picture of Pokemon card and store as image
+    - Run edge detection to crop card image from background
+    -
+    """
+    # Setting page configuration
     st.set_page_config(
-        page_title="Pokereader streamlit",  # => Quick reference - Streamlit
+        page_title="Pokereader streamlit",
         page_icon="🐍",
-        layout="wide",  # wide
+        layout="wide",
         initial_sidebar_state="auto",
-    )  # collapsed
+    )
 
-    # Displaying the logo
+    # Displaying PokeReader logo
     logo = get_logo()
     st.image(logo)
 
+    # User input to upload Pokemon card picture
     uploaded_file = st.file_uploader(r"$\textsf{\large Upload a Pokemon card picture...}$", type=["jpg", "jpeg", "png"])
 
+    # Store uploaded picture as image
     uploaded = False
     if uploaded_file is not None:
         bytes_data = uploaded_file.getvalue()
         if bytes_data:
             try:
                 image = Image.open(BytesIO(bytes_data))
-                # columns[0].image(image, caption='Uploaded Image.', use_column_width=True)
-                # st.image(image, caption='Uploaded Image.', use_column_width=True)
                 uploaded = True
             except IOError:
                 st.error("Cannot identify image file. Please check the file format and try again.")
@@ -43,22 +51,22 @@ def main():
         else:
             st.warning("Uploaded file is empty. Please upload a valid image file.")
 
-    # edge detection
     edge_detection = False
+    ## START RUNNING ONCE IMAGE IS UPLOADED ##
     if uploaded == True:
         try:
+            # Run edge detection on image to isolate card from background
             card_image = deform_card(image)
             co = st.columns(3)
-            co[1].image(card_image)  # caption='Cut Image.'
+            co[1].image(card_image)
             edge_detection = True
         except:
             st.warning("We could not recognize your card. Please try to upload another image.")
 
+        # Store running Pikachu GIF to be used during loading time
         pikachu = "https://media.tenor.com/SH31iAEWLT8AAAAi/pikachu-running.gif"
-        # pikachu = "https://cdnb.artstation.com/p/assets/images/images/055/908/871/original/timothe-muller-pika-running.gif?1668011191"
         co = st.columns(3)
         with co[1].image(pikachu):
-            # co[1].image( pikachu, use_column_width=True )
             ### ----- MODEL API REQUEST ----- ###
             predicted = False
             if card_image is not None:
@@ -68,7 +76,7 @@ def main():
                 file = {"file": encoded_image_bytes}
 
                 response = requests.post("https://poke-api-cloud-na-yjefrbroka-uw.a.run.app/predict", files=file)
-
+                ### STORE THE SET_ID AND POKE_ID FROM PREDICTION ##
                 if response.status_code == 200:
                     set_id = response.json()["set_id"]
                     poke_id = response.json()["poke_id"]
@@ -79,9 +87,10 @@ def main():
             ### ---------- ###
 
         correct_card = False
+
+        ## START RUNNING IF EDGE_DETECTION and PREDICTION STEP IS COMPLETE ##
         if edge_detection == True and predicted == True:
-            # Get the info about the card!
-            if poke_id == "":
+            if poke_id == "": # If PokeID is not detected, ask for manual input
                 st.write("Poke ID could not be retrieved.")
                 imcorners = get_corners()
                 co = st.columns(3)
@@ -89,9 +98,10 @@ def main():
                 poke_id = st.number_input("Please input Poke ID by hand as shown above:", step=1, value=0)
 
             if poke_id != "" and poke_id != 0:
+                # If PokeID is detected, obtain rarity/market price/image_url from Pokemon API
                 rarity, market_price, image_url = get_card_info(set_id, int(poke_id))
 
-                # Create a dropdown menu with options 'Yes' and 'No'
+                # Ask user if it is the correct card
                 user_input = st.radio("Is this the correct card?", ("Absolutely :)", "Not Quite :("))
                 if user_input == "Not Quite :(":
                     st.write("Please try uploading another pic... Sorry!")
