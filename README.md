@@ -6,7 +6,7 @@ PokeReader is a web app allowing a user to get the price and rarity of a Pokemon
 
 <img src="PokeReader_app.png" alt="PokeReader_app" width="200"/>
 
-- [Link to the app](https://pokereader.streamlit.app/)
+- App 🔗 https://pokereader.streamlit.app/
 - [View GoogleSlides presentation](https://docs.google.com/presentation/d/1Pb1OAsDZ5j1nHlwInYsBzDwfNHyLLF8TBN1zhLPsFgI/edit?usp=sharing)
 
 
