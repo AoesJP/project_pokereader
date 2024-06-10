@@ -6,7 +6,8 @@ from PIL import Image
 from io import BytesIO
 import base64
 
-from interface.app_utils import get_logo, get_teamrocket, get_corners, SETS, show_rarity, rarity_emoji, price_hype
+from interface.app_utils import get_logo, get_teamrocket, get_corners, SETS
+from interface.app_utils import show_rarity, rarity_emoji, price_hype
 
 from pokedex.edges.deformer import deform_card
 from pokedex.prediction import get_card_info
@@ -80,7 +81,7 @@ def main():
 
                 # API server request
                 response = requests.post("https://poke-api-cloud-na-yjefrbroka-uw.a.run.app/predict", files=file)
-                
+
                 # Retrieving API response
                 if response.status_code == 200:
                     set_id = response.json()["set_id"]
@@ -92,7 +93,7 @@ def main():
             ### ---------- ###
 
         correct_card = False
-        
+
         ## START RUNNING IF EDGE_DETECTION and PREDICTION STEP IS COMPLETE ##
         if edge_detection and predicted:
             # If PokeID is not detected, ask for manual input
