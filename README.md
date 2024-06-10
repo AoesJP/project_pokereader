@@ -9,6 +9,22 @@ PokeReader is a web app allowing a user to get the price and rarity of a Pokemon
 - App 🔗 https://pokereader.streamlit.app/
 - [View GoogleSlides presentation](https://docs.google.com/presentation/d/1Pb1OAsDZ5j1nHlwInYsBzDwfNHyLLF8TBN1zhLPsFgI/edit?usp=sharing)
 
+## Technologies used
+### Libraries:
+- Data Manipulation and Analysis: Pandas
+- Visualization: Matplotlib, Seaborn
+- CNN: Tensorflow
+- OCR: Pytesseract, Pyocr
+- Computer Vision: OpenCV, Pillow
+- Deployment: FastAPI, Uvicorn, Docker, GCP Cloud Run
+- Web Application: Streamlit
+### Techniques and Models:
+- Edge Detection
+- Convolutional Neural Network (CNN)
+- Optical Character Recognition (OCR)
+### Development Environment:
+- Jupyter Notebook - used for interactive model development and experimentation
+- Visual Studio Code - used for packaging the model and further development, including front-end
 
 ## Workflow
 We have use the Pokemon TCG API to retrieve the price and rarity of a given Pokemon card. To access this information, we need to provide to the API the **set ID** and the **card number** of the Pokemon card we are interested in. 
