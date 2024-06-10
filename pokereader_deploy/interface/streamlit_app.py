@@ -135,7 +135,7 @@ def main():
                 unsafe_allow_html=True,
             )
 
-            # Write down card value and rarity.
+            # Display card price and rarity with appropriate emojis
             emoji = rarity_emoji(rarity)
             price_emoji = price_hype(market_price)
             st.markdown(f"## Card value is ${market_price} today {price_emoji}")
