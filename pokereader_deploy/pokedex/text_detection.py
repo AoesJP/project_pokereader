@@ -4,12 +4,28 @@ import pytesseract
 import pyocr
 
 import cv2
-from PIL import Image, ImageEnhance, ImageOps
+from PIL import Image, ImageEnhance, ImageOps, ImageFilter
 
 import re
 
 from pokedex import SETINFO
-from pokedex import ocr
+
+
+def is_groove(img: Image.Image) -> bool:
+    """
+    Checking if the input image is white text and black bg or black text and white bg
+
+    Args:
+        img (Image.Image): Input image
+
+    Returns:
+        bool: True if the input image is black text with white bg, else False
+    """
+    orig_arr = np.array(img, dtype="float32") / 255
+    eroded_arr = np.array(img.filter(ImageFilter.GaussianBlur(3)).filter(ImageFilter.MaxFilter(15)), dtype="float32") / 255
+    orig_var = orig_arr.var()
+    eroded_var = eroded_arr.var()
+    return eroded_var - orig_var < 0
 
 
 def preproc_clean(data: list) -> np.ndarray:
@@ -57,7 +73,7 @@ def get_id_coords(set_id: str) -> tuple:
     return id_coord
 
 
-def add_contrast(img: Image, low: float =0.1, high: float=0.95) -> Image:
+def add_contrast(img: Image, low: float = 0.1, high: float = 0.95) -> Image:
     """This function enhances the contrast of a PokeID image for improved OCR results.
 
     The contrast is adjusted by scaling the pixel values based on the specified
@@ -103,7 +119,7 @@ def ocr_preprocessor(img_input: list, set_id: str) -> Image:
 
     # If text is white, invert image so that text is black
 
-    if ocr.is_groove(im_offset):  # Black Text
+    if is_groove(im_offset):  # Black Text
         im_offset = ImageOps.invert(im_offset)
         im_offset = add_contrast(im_offset, 0.2, 0.97)
 
