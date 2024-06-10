@@ -2,7 +2,7 @@
 ## Summary
 PokeReader is a web app allowing a user to get the price and rarity of a Pokemon card from a picture that they would have taken or uploaded.
 
-![PokeReader_app](PokeReader_app.png =200x)
+<img src="PokeReader_app.png" alt="PokeReader_app" width="200"/>
 
 ## App
 https://pokereader.streamlit.app/
