@@ -25,6 +25,7 @@ def main():
     logo = get_logo()
     st.image(logo)
 
+    # Image File Uploader
     uploaded_file = st.file_uploader(r"$\textsf{\large Upload a Pokemon card picture...}$", type=["jpg", "jpeg", "png"])
 
     uploaded = False
@@ -43,10 +44,11 @@ def main():
         else:
             st.warning("Uploaded file is empty. Please upload a valid image file.")
 
-    # edge detection
+    # Edge Detection
     edge_detection = False
-    if uploaded == True:
+    if uploaded:
         try:
+            # Deforming Card
             card_image = deform_card(image)
             co = st.columns(3)
             co[1].image(card_image)  # caption='Cut Image.'
@@ -67,8 +69,10 @@ def main():
                 encoded_image_bytes = buf.getvalue()
                 file = {"file": encoded_image_bytes}
 
+                # API server request
                 response = requests.post("https://poke-api-cloud-na-yjefrbroka-uw.a.run.app/predict", files=file)
 
+                # Retrieving API response
                 if response.status_code == 200:
                     set_id = response.json()["set_id"]
                     poke_id = response.json()["poke_id"]
@@ -79,7 +83,7 @@ def main():
             ### ---------- ###
 
         correct_card = False
-        if edge_detection == True and predicted == True:
+        if edge_detection and predicted:
             # Get the info about the card!
             if poke_id == "":
                 st.write("Poke ID could not be retrieved.")
@@ -103,7 +107,7 @@ def main():
                     left_co, cent_co, last_co = st.columns(3)
                     cent_co.image(image_url)
 
-        if correct_card == True and edge_detection == True:
+        if correct_card and edge_detection:
             # Display the API pokemon card
             st.markdown(
                 """
