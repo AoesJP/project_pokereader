@@ -5,11 +5,13 @@ import numpy as np
 import requests
 
 
-def card_prediction_processing(card):
+def card_prediction_processing(card: np.array):
     """
-    Input is a numpy array of size (825, 600)
-    gets cropped to (72, 200)
-    add dimensions to fit the model imput size
+    Import full size card
+    Slice the card to get bottom left and right corners
+    convert to gray scale, resize to add a dimension for processing, normalize
+
+    returns left and right processed bottom corner
     """
     card_image = cv2.resize(card, (INITIAL_WIDTH, INITIAL_HEIGHT))
 
@@ -36,7 +38,11 @@ def card_prediction_processing(card):
         return None
 
 
-def card_ocr_crop(card, set_id):
+def card_ocr_crop(card: np.array, set_id: str) -> np.array:
+    """
+    Get full size card, resize it with high res values
+    Crop the bottom corners for ocr detection
+    """
     side = SETINFO[SETINFO[:,0] == set_id][0,3]
 
     card = cv2.resize(card, (HIRES_WIDTH, HIRES_HEIGHT))
@@ -50,7 +56,12 @@ def card_ocr_crop(card, set_id):
         return bottomright
 
 
-def get_card_info(set_id, poke_id):
+def get_card_info(set_id: str, poke_id: str | int):
+    """
+    Get the card info: image url, rarity, price
+    from set id and card number
+    using the Pokemon TCG API
+    """
     url = f'https://api.pokemontcg.io/v2/cards/{set_id}-{str(poke_id)}'
     response = requests.get(url)
     if response.status_code == 200:
@@ -60,9 +71,6 @@ def get_card_info(set_id, poke_id):
         market_price = result['data']['cardmarket']['prices']['averageSellPrice']
         image_url = result['data']['images']['large']
 
-        print(rarity)
-        print(market_price)
-        print(image_url)
         return rarity, market_price, image_url
     else:
         print(f"Failed to retrieve info. HTTP Status code: {response.status_code}")

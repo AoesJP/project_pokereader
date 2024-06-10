@@ -36,7 +36,7 @@ def main():
     logo = get_logo()
     st.image(logo)
 
-    # User input to upload Pokemon card picture
+    # Image File Uploader
     uploaded_file = st.file_uploader(r"$\textsf{\large Upload a Pokemon card picture...}$", type=["jpg", "jpeg", "png"])
 
     # Store uploaded picture as image
@@ -54,11 +54,11 @@ def main():
         else:
             st.warning("Uploaded file is empty. Please upload a valid image file.")
 
+    # Edge Detection
     edge_detection = False
-    ## START RUNNING ONCE IMAGE IS UPLOADED ##
-    if uploaded == True:
+    if uploaded:
         try:
-            # Run edge detection on image to isolate card from background
+            # Deforming Card
             card_image = deform_card(image)
             co = st.columns(3)
             co[1].image(card_image)
@@ -78,8 +78,10 @@ def main():
                 encoded_image_bytes = buf.getvalue()
                 file = {"file": encoded_image_bytes}
 
+                # API server request
                 response = requests.post("https://poke-api-cloud-na-yjefrbroka-uw.a.run.app/predict", files=file)
-                ### STORE THE SET_ID AND POKE_ID FROM PREDICTION ##
+                
+                # Retrieving API response
                 if response.status_code == 200:
                     set_id = response.json()["set_id"]
                     poke_id = response.json()["poke_id"]
@@ -90,10 +92,11 @@ def main():
             ### ---------- ###
 
         correct_card = False
-
+        
         ## START RUNNING IF EDGE_DETECTION and PREDICTION STEP IS COMPLETE ##
-        if edge_detection == True and predicted == True:
-            if poke_id == "": # If PokeID is not detected, ask for manual input
+        if edge_detection and predicted:
+            # If PokeID is not detected, ask for manual input
+            if poke_id == "":
                 st.write("Poke ID could not be retrieved.")
                 imcorners = get_corners()
                 co = st.columns(3)
@@ -117,7 +120,7 @@ def main():
                     cent_co.image(image_url)
 
         ## START RUNNING IF CORRECT CARD IS DETECTED ##
-        if correct_card == True and edge_detection == True:
+        if correct_card and edge_detection:
             # Display the API pokemon card
             st.markdown(
                 """
