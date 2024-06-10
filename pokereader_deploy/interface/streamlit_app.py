@@ -14,13 +14,16 @@ from pokedex.prediction import get_card_info
 
 def main():
     """
-    Main function for Streamlit app.
-    - Set the page configuration
-    - Display the PokeReader Logo
-    - Ask user to upload picture of Pokemon card and store as image
-    - Run edge detection to crop card image from background
-    -
+    Main function for the Streamlit app.
+    - Sets the page configuration.
+    - Displays the PokeReader logo.
+    - Prompts the user to upload a picture of a Pokemon card and stores it as an image.
+    - Runs edge detection to crop the card image from the background.
+    - Requests prediction for the card's Set ID and Poke ID.
+    - Displays the predicted card's information and asks the user to confirm if it's correct.
+    - Displays the detected card image and additional information if the correct card is confirmed.
     """
+
     # Setting page configuration
     st.set_page_config(
         page_title="Pokereader streamlit",
@@ -101,7 +104,7 @@ def main():
                 # If PokeID is detected, obtain rarity/market price/image_url from Pokemon API
                 rarity, market_price, image_url = get_card_info(set_id, int(poke_id))
 
-                # Ask user if it is the correct card
+                # Ask user if correct card is detected
                 user_input = st.radio("Is this the correct card?", ("Absolutely :)", "Not Quite :("))
                 if user_input == "Not Quite :(":
                     st.write("Please try uploading another pic... Sorry!")
@@ -113,6 +116,7 @@ def main():
                     left_co, cent_co, last_co = st.columns(3)
                     cent_co.image(image_url)
 
+        ## START RUNNING IF CORRECT CARD IS DETECTED ##
         if correct_card == True and edge_detection == True:
             # Display the API pokemon card
             st.markdown(
@@ -130,11 +134,13 @@ def main():
             """,
                 unsafe_allow_html=True,
             )
-            # Use the styles in your Markdown
+
+            # Write down card value and rarity.
             emoji = rarity_emoji(rarity)
             price_emoji = price_hype(market_price)
             st.markdown(f"## Card value is ${market_price} today {price_emoji}")
             st.markdown(f"## Your card is {rarity.upper()} {emoji}")
 
+            # If user checks the Display rarity table, show rarity
             if st.checkbox("Display Rarity table"):
                 show_rarity(rarity)
