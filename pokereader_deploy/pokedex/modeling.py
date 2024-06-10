@@ -4,9 +4,13 @@ from sklearn.utils import shuffle
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import confusion_matrix
 
+import cv2
+
+
 from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Activation, Dropout, Flatten, Conv2D, MaxPooling2D
+
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 
@@ -62,6 +66,7 @@ def preprocessing(path: str):
     y_test = categories[nb_split2:,:]
 
     return XX_train, y_train, XX_val, y_val, XX_test, y_test, label_encoder
+
 
 def symbols_model(data_path: str):
     """

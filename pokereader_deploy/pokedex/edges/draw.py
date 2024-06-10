@@ -5,17 +5,26 @@ import cv2
 import matplotlib.pyplot as plt
 
 
-def show_color(img, figsize=(10, 10)):
+def show_color(img, figsize=(10, 10)) -> None:
+    """
+    Plotting color image
+    """
     plt.figure(figsize=figsize)
     plt.imshow(img, vmin=0, vmax=255)
 
 
-def show_grey(img, figsize=(10, 10)):
+def show_grey(img, figsize=(10, 10)) -> None:
+    """
+    Plotting greyscale image
+    """
     plt.figure(figsize=figsize)
     plt.imshow(img, cmap="grey", vmin=0, vmax=255)
 
 
-def show_channels(img: np.ndarray, figsize=(10, 10)):
+def show_channels(img: np.ndarray, figsize=(10, 10)) -> None:
+    """
+    Plotting channels
+    """
     plt.figure(figsize=figsize)
     channels = img.shape[2]
     plt.figure(figsize=(6 * channels, 6))
@@ -24,7 +33,10 @@ def show_channels(img: np.ndarray, figsize=(10, 10)):
         plt.imshow(img[:, :, i], cmap="grey", vmin=0, vmax=255)
 
 
-def draw_contour(img, contour, points: bool = True, line_width: int = 2, point_size: int = 6):
+def draw_contour(img, contour, points: bool = True, line_width: int = 2, point_size: int = 6) -> None:
+    """
+    Plotting contour on a given image
+    """
     img_copy = img.copy()
     img_contour = cv2.drawContours(img_copy, [contour], -1, (50, 255, 0), line_width)
     if points:
@@ -33,7 +45,10 @@ def draw_contour(img, contour, points: bool = True, line_width: int = 2, point_s
     plt.imshow(img_contour)
 
 
-def draw_contours(img, contours, points: bool = True, line_width: int = 2, point_size: int = 6):
+def draw_contours(img, contours, points: bool = True, line_width: int = 2, point_size: int = 6) -> None:
+    """
+    Plotting contours on a given image
+    """
     img_copy = img.copy()
     img_contour = cv2.drawContours(img_copy, contours, -1, (50, 255, 0), line_width)
     for contour in contours:
@@ -43,7 +58,10 @@ def draw_contours(img, contours, points: bool = True, line_width: int = 2, point
     plt.imshow(img_contour)
 
 
-def draw_lines(img: np.ndarray, lines: np.ndarray):
+def draw_lines(img: np.ndarray, lines: np.ndarray) -> None:
+    """
+    Plotting lines on a given image
+    """
     img_copy = img.copy()
     for line in lines:
         a, b, c = line
