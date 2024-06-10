@@ -87,7 +87,7 @@ def get_corners():
 def get_teamrocket():
     """
     Function to return image of Team Rocket.
-    Image is displayed on UI if correct Set ID is not idenitified by PokeReader.
+    Image is displayed on UI if correct card is not idenitified by PokeReader.
     """
     rocket_rgba = cv2.imread(TEAMROCKET_PATH, cv2.IMREAD_UNCHANGED)
     team_rocket = cv2.cvtColor(rocket_rgba, cv2.COLOR_BGRA2RGBA)
