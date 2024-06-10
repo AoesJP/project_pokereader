@@ -4,6 +4,7 @@ import streamlit as st
 
 HERE = Path(__file__).parent
 
+# List of Pokemon card Rarities
 RARITIES = [
     "Common",
     "Uncommon",
@@ -30,6 +31,7 @@ RARITIES = [
     "Promo"
 ]
 
+# Dictionary of pokemon card Set ID and Set Name
 SETS = {
     'dv1': 'Dragon Vault',
     'swsh9': 'Brilliant Stars',
@@ -57,13 +59,11 @@ LOGO_PATH = str(HERE / 'PokeReader_Logo.png')
 TEAMROCKET_PATH = str(HERE / 'Team_Rocket.png')
 CORNERS_PATH = str(HERE / 'corners.jpeg')
 
-def lol():
-    '''functino to print lol!'''
-    print('lol')
-
 @st.cache_data
 def get_logo():
-    '''function to return cropped logo for streamlit UI'''
+    """Function to return PokeReader Logo.
+    Displayed at the top of the Streamlit UI.
+    """
     logo_rgba = cv2.imread(LOGO_PATH, cv2.IMREAD_UNCHANGED)
     logo_rgb = cv2.cvtColor(logo_rgba, cv2.COLOR_BGRA2RGBA)
 
@@ -73,6 +73,11 @@ def get_logo():
 
 @st.cache_data
 def get_corners():
+    """
+    Function to return image of Pokemon card corners with Poke IDs.
+    Used to guide users in locating the PokeID manually in case not detected
+    by Pokereader.
+    """
     corners_rgba = cv2.imread(CORNERS_PATH, cv2.IMREAD_UNCHANGED)
     corners = cv2.cvtColor(corners_rgba, cv2.COLOR_BGRA2RGBA)
 
@@ -80,13 +85,20 @@ def get_corners():
 
 @st.cache_data
 def get_teamrocket():
+    """
+    Function to return image of Team Rocket.
+    Image is displayed on UI if correct card is not idenitified by PokeReader.
+    """
     rocket_rgba = cv2.imread(TEAMROCKET_PATH, cv2.IMREAD_UNCHANGED)
     team_rocket = cv2.cvtColor(rocket_rgba, cv2.COLOR_BGRA2RGBA)
 
     return team_rocket
 
 def show_rarity(spotlight_rarity):
-    '''function to display rarity of card in colored box'''
+    """
+    Function to display rarities of pokemon cards.
+    The rarity of the card detected by PokeReader will be highlighted in purple.
+    """
     num_rows = len(RARITIES)
     num_columns = len(RARITIES) // num_rows + (len(RARITIES) % num_rows > 0)
 
@@ -104,7 +116,11 @@ def show_rarity(spotlight_rarity):
                         st.markdown(f'<div style="padding: 10px; border: 1px solid black; font-family: Arial;">{rarity}</div>', unsafe_allow_html=True)
 
 def rarity_emoji(spotlight_rarity):
-    '''function to display different emoji depending on card rarity'''
+    """
+    Function to return different emojis depending on level of rarity.
+    More exciting emojis are returned the rarer the card is.
+    """
+
     if spotlight_rarity in RARITIES[0]:
         return '💩'
     elif spotlight_rarity in RARITIES[1]:
@@ -119,7 +135,10 @@ def rarity_emoji(spotlight_rarity):
         return '🎉🎉🎉🙌 '
 
 def price_hype(price):
-    '''function to display different emoji depending on card price'''
+    """
+    Function to return different emojis depending on card price.
+    More exciting emojis are returned the more expensive the card is.
+    """
     if price < 0.5:
         return "😭"
     elif price < 1:
