@@ -7,10 +7,19 @@ from io import BytesIO
 from pokedex import HARD_CODED_WIDTH, HARD_CODED_HEIGHT, INITIAL_HEIGHT, INITIAL_WIDTH
 from pokedex import SETINFO, REDUCED_SET
 
-def create_dataset():
+def create_dataset() -> pd.DataFrame:
     '''
-    This function creates the full working dataset we will use for training the data.
-    It does not save it though. Returns the dataframe
+    Creates the first dataset
+    From list of sets that we want to use (SETINFO), we retrieve:
+        - all the cards in each set
+        - set id for each card (consistent within one set)
+        - side of the set id for each card (consistent within one set)
+    Each card will have both bottom corners cut:
+        - the side with the info will have real set id name
+        - the side without the info will have 'no' as set id and full set name
+
+    Returns the following dataframe:
+    Bottom corner image | corner side | set id name | full set name
     '''
 
     # Target array that will contain all the info we will need for training
@@ -24,15 +33,7 @@ def create_dataset():
 
         # Loop over each image in the current set
         for i in range(1,int(SETINFO[j,1])+1):
-
-
-            # url = f'https://api.pokemontcg.io/v2/cards/{s_id}-{str(i)}'
-            # # get info about card to get url
-            # response = requests.get(url)
-            # if response.status_code == 200:
-            #     image_url = response.json()['data']['images']['large']
-
-
+            # Get the image directly from the link with set id and poke id
             image_url = f'https://images.pokemontcg.io/{s_id}/{str(i)}_hires.png'
 
             # Send a GET request to the image URL to retrieve the image
@@ -42,25 +43,18 @@ def create_dataset():
                 # Open the image using PIL
                 image = Image.open(BytesIO(response_card.content))
 
-                # Save the image to a file
+                # # Save the pokemon card image
                 # image.save(f"../raw_data/pokemon_cards_api/card_{s_id}_{str(i)}.png")
-                # width, height = image.size
 
-                # crop bottom corners of the card
                 card_image = np.array(image)
-
                 new_card = cv2.resize(card_image, (INITIAL_WIDTH, INITIAL_HEIGHT))
 
+                # crop bottom corners of the card
                 h, w, d = new_card.shape
                 bottomleft = new_card[h-HARD_CODED_HEIGHT:, :HARD_CODED_WIDTH, :]
                 bottomright = new_card[h-HARD_CODED_HEIGHT:, w-HARD_CODED_WIDTH:, :]
                 graybottomleft = cv2.cvtColor(bottomleft, cv2.COLOR_BGR2GRAY)
                 graybottomright = cv2.cvtColor(bottomright, cv2.COLOR_BGR2GRAY)
-
-                # bottomleft = image.crop((width*0.75, height*0.93, width, height))
-                # bottomright = image.crop((0, height*0.93, width*0.25, height))
-                # graybottomleft = cv2.cvtColor(np.array(bottomleft), cv2.COLOR_BGR2GRAY)
-                # graybottomright = cv2.cvtColor(np.array(bottomright), cv2.COLOR_BGR2GRAY)
 
                 # add the cropped corners to dataframe with other info
                 # depending if the card info is on the left or right side
@@ -76,27 +70,31 @@ def create_dataset():
                     k+=1
             else:
                 print(f"Failed to retrieve image. HTTP Status code: {response_card.status_code}")
-        # else:
-        #     print(f"Failed to retrieve image url. HTTP Status code: {response.status_code}")
 
     return dataset_df
 
 
 
-def reduce_dataset(path):
+def reduce_dataset(path: str) -> None:
     """
-    Imports the full dataset and drops as many rows as necessary to have maximum 150 cards per set
-    before data augmentation.
-    Separate left and right dataset.
+    Creates left and right datasets with max 500 (=REDUCED_SET) cards per set
+    (necessary for the artificial 'no' set that has too many cards in it)
+
+    This step is done before data augmentation.
+
     It saves both the datasets as json. Return nothing.
     """
 
-    df = pd.read_json(path) # '../raw_data/dict_dataset_full.json'
+    # Imports the full dataset created from create_dataset()
+    df = pd.read_json(path)
 
-    # setinfo_left = setinfo[setinfo[:,3] == 'left']
-    # setinfo_right = setinfo[setinfo[:,3] == 'right']
-
-    def df_side(setinfo, side):
+    def df_side(df: pd.DataFrame, setinfo: np.array, side: str) -> pd.DataFrame:
+        """
+        For chosen side value (left of right), creates the dataset with decided max number of cards
+        - finds all the sets that have chosen side, and add 'no' set to the list
+        - finds the sets that have more than REDUCED_SET number of cards
+        - randomly drop rows to reach that number
+        """
         setinfo = setinfo[setinfo[:,3] == side]
 
         set_list = setinfo[:,0]
@@ -116,10 +114,10 @@ def reduce_dataset(path):
 
         return df_small
 
-    df_small_left = df_side(SETINFO, side = 'left')
+    df_small_left = df_side(df, SETINFO, side = 'left')
     df_small_left.to_json('../../raw_data/dict_reduceddataset_left.json')
 
-    df_small_right = df_side(SETINFO, side = 'right')
+    df_small_right = df_side(df, SETINFO, side = 'right')
     df_small_right.to_json('../../raw_data/dict_reduceddataset_right.json')
 
     return None
