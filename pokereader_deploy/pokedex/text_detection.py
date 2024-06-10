@@ -12,16 +12,16 @@ from pokedex import SETINFO
 from pokedex import ocr
 
 
-def preproc_clean(data: list):
+def preproc_clean(data: list) -> np.ndarray:
     """
-    Converts image data (list) into a NumPy array, adds an extra dimension,
+    Converts image data into a NumPy array, adds an extra dimension,
     and converts the data type to uint8.
     """
     _ = np.array(data)
     return np.expand_dims(_, axis=2).astype("uint8")
 
 
-def get_id_coords(set_id: str):
+def get_id_coords(set_id: str) -> tuple:
     """
     Returns the coordinates of the rectangular portion of an image that includes the PokeID.
     Note: Coordinates are hard-coded per Set ID.
@@ -30,7 +30,7 @@ def get_id_coords(set_id: str):
     # Default value if set_id doesn't match any conditions
     id_coord = None
 
-    # Poke ID coordinates for
+    # Poke ID coordinates for Left side sets
     if set_id in ("sv3", "sv4", "sv3pt5", "sv2"):
         id_coord = (285, 75, 550, 125)
     elif set_id in ("swsh9", "swsh6", "swsh12pt5", "swsh10", "swsh45"):
@@ -38,7 +38,7 @@ def get_id_coords(set_id: str):
     elif set_id == "sm4":
         id_coord = (190, 70, 359, 90)
 
-    # right sets
+    # Poke ID coordinates for Right side sets
     elif set_id in ("dv1", "g1"):
         id_coord = (210, 85, 380, 110)
     elif set_id == "xy1":
@@ -57,7 +57,7 @@ def get_id_coords(set_id: str):
     return id_coord
 
 
-def add_contrast(img: Image, low: float =0.1, high: float=0.95):
+def add_contrast(img: Image, low: float =0.1, high: float=0.95) -> Image:
     """This function enhances the contrast of a PokeID image for improved OCR results.
 
     The contrast is adjusted by scaling the pixel values based on the specified
@@ -72,30 +72,36 @@ def add_contrast(img: Image, low: float =0.1, high: float=0.95):
     return Image.fromarray(np_num.astype(np.uint8))
 
 
-def ocr_preprocessor(img_input: list, set_id: str):
+def ocr_preprocessor(img_input: list, set_id: str) -> Image:
     """
     This function applies several preprocessing steps to an image to enhance the OCR performance:
-    - Cleans the input data dimension and converts it to a NumPy array.
+    - Cleans the input data dimension.
     - Converts the image to grayscale.
     - Crops the image to the rectangular portion that includes only the PokeID.
     - Enhances the image contrast.
     - Inverts the color scale if the text is white, ensuring that text is black for better OCR recognition.
     """
+
+    # Input data dimension cleanup
     img_input = preproc_clean(img_input).squeeze()
 
-    # Gray scale
+    # Convert to gray scale
     gray_img = cv2.cvtColor(img_input, cv2.COLOR_BGR2GRAY)
 
+    # Crop portion of image only with PokeID
     img = Image.fromarray(gray_img)
     side_offset = 20
     a, b, c, d = get_id_coords(set_id)
     img_contrast = img.crop((a, b - side_offset, c + side_offset, d + side_offset))
 
+    # Enhnce contrast
     contrast_enhancer = ImageEnhance.Contrast(img_contrast)
     img_contrast = contrast_enhancer.enhance(1)
 
     im_offset = np.clip(img_contrast, 0, 255).astype("uint8")
     im_offset = Image.fromarray(im_offset)
+
+    # If text is white, invert image so that text is black
 
     if ocr.is_groove(im_offset):  # Black Text
         im_offset = ImageOps.invert(im_offset)
@@ -110,13 +116,24 @@ def ocr_preprocessor(img_input: list, set_id: str):
     return im_offset
 
 
-def ocr_text(img):
+def ocr_text(img: np.ndarray) -> str:
+    """
+    Extracts text from an image using OCR.
+
+    This function uses the Tesseract OCR engine to extract numerical text from the input image.
+    The process involves:
+    1. Cleaning the input image.
+    2. Configuring the OCR tool to recognize only digits and slashes.
+    3. Enhancing the image if the initial OCR attempt returns no results,
+    and retrying up to 10 times with different enhancements.
+    """
+
     img = preproc_clean(img).squeeze()
     tools = pyocr.get_available_tools()
     tool = tools[0]
 
     builder = pyocr.builders.TextBuilder(tesseract_layout=6)
-    # builder.tesseract_configs.append("digits")
+
     builder.tesseract_configs.append("-c")
     builder.tesseract_configs.append("tessedit_char_whitelist=0123456789/")
     builder.tesseract_configs.append("--psm")
@@ -132,7 +149,7 @@ def ocr_text(img):
         # Try 10 times to get something from OCR
         brightness_enhancer = ImageEnhance.Brightness(img)
         contrast_enhancer = ImageEnhance.Contrast(img)
-        # sharp_enhancer = ImageEnhance.Sharpness(img)
+
         for i in range(10):
             rand_floats = 2 * np.random.rand(3) - 1
             img_bright = brightness_enhancer.enhance(1 + rand_floats[2] * 0.2)
@@ -143,15 +160,11 @@ def ocr_text(img):
             result = tool.image_to_string(img_enhance, lang="eng", builder=builder)
             if result:
                 break
-            # img_sharp = sharp_enhancer.enhance(1 + rand_floats[1] * 0.2)
-            # result = tool.image_to_string(img_sharp, lang="eng", builder=builder)
-            # if result:
-            #     break
 
     return result
 
 
-def extract_number_before_slash_or_cardtotal(text: str, set_id: str):
+def extract_number_before_slash_or_cardtotal(text: str, set_id: str) -> str:
     """
     Extracts the number before a slash or the card total sequence from a given text.
 
@@ -197,7 +210,7 @@ def extract_number_before_slash_or_cardtotal(text: str, set_id: str):
                 return ""
 
 
-def clean_pokeid(pokeid: str, set_id: str):
+def clean_pokeid(pokeid: str, set_id: str) -> str:
     """Cleans the PokeID detected through OCR to ensure a valid PokeID is returned.
 
     Below steps are performed:
@@ -263,7 +276,7 @@ def clean_pokeid(pokeid: str, set_id: str):
     return pokeid
 
 
-def get_pokeid(img, set_id: str):
+def get_pokeid(img: np.ndarray, set_id: str) -> str:
     """
     Extracts the PokeID from an image using the provided set ID.
 
