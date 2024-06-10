@@ -12,18 +12,20 @@ from interface.app_utils import show_rarity, rarity_emoji, price_hype
 from pokedex.edges.deformer import deform_card
 from pokedex.prediction import get_card_info
 
+
 def main():
     st.set_page_config(
-        page_title="Pokereader streamlit", # => Quick reference - Streamlit
+        page_title="Pokereader streamlit",  # => Quick reference - Streamlit
         page_icon="🐍",
-        layout="wide", # wide
-        initial_sidebar_state="auto") # collapsed
+        layout="wide",  # wide
+        initial_sidebar_state="auto",
+    )  # collapsed
 
     # Displaying the logo
     logo = get_logo()
     st.image(logo)
 
-    uploaded_file = st.file_uploader(r"$\textsf{\large Upload a Pokemon card picture...}$", type=['jpg', 'jpeg', 'png'])
+    uploaded_file = st.file_uploader(r"$\textsf{\large Upload a Pokemon card picture...}$", type=["jpg", "jpeg", "png"])
 
     uploaded = False
     if uploaded_file is not None:
@@ -31,7 +33,7 @@ def main():
         if bytes_data:
             try:
                 image = Image.open(BytesIO(bytes_data))
-                #columns[0].image(image, caption='Uploaded Image.', use_column_width=True)
+                # columns[0].image(image, caption='Uploaded Image.', use_column_width=True)
                 # st.image(image, caption='Uploaded Image.', use_column_width=True)
                 uploaded = True
             except IOError:
@@ -47,7 +49,7 @@ def main():
         try:
             card_image = deform_card(image)
             co = st.columns(3)
-            co[1].image(card_image) # caption='Cut Image.'
+            co[1].image(card_image)  # caption='Cut Image.'
             edge_detection = True
         except:
             st.warning("We could not recognize your card. Please try to upload another image.")
@@ -60,13 +62,12 @@ def main():
             ### ----- MODEL API REQUEST ----- ###
             predicted = False
             if card_image is not None:
-
                 buf = BytesIO()
                 plt.imsave(buf, card_image, format="png")
                 encoded_image_bytes = buf.getvalue()
                 file = {"file": encoded_image_bytes}
 
-                response = requests.post("https://poke-api-cloud-instance1-yjefrbroka-an.a.run.app/predict", files=file)
+                response = requests.post("https://poke-api-cloud-na-yjefrbroka-uw.a.run.app/predict", files=file)
 
                 if response.status_code == 200:
                     set_id = response.json()["set_id"]
@@ -92,19 +93,20 @@ def main():
 
                 # Create a dropdown menu with options 'Yes' and 'No'
                 user_input = st.radio("Is this the correct card?", ("Absolutely :)", "Not Quite :("))
-                if user_input == 'Not Quite :(':
+                if user_input == "Not Quite :(":
                     st.write("Please try uploading another pic... Sorry!")
                     team_rocket = get_teamrocket()
-                    left_co, cent_co,last_co = st.columns(3)
+                    left_co, cent_co, last_co = st.columns(3)
                     cent_co.image(team_rocket)
-                elif user_input == 'Absolutely :)':
+                elif user_input == "Absolutely :)":
                     correct_card = True
-                    left_co, cent_co,last_co = st.columns(3)
+                    left_co, cent_co, last_co = st.columns(3)
                     cent_co.image(image_url)
 
         if correct_card == True and edge_detection == True:
-        # Display the API pokemon card
-            st.markdown("""
+            # Display the API pokemon card
+            st.markdown(
+                """
             <style>
             .big-red {
                 font-size: 24px;
@@ -115,12 +117,14 @@ def main():
                 text-align: right;
             }
             </style>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
             # Use the styles in your Markdown
             emoji = rarity_emoji(rarity)
             price_emoji = price_hype(market_price)
             st.markdown(f"## Card value is ${market_price} today {price_emoji}")
             st.markdown(f"## Your card is {rarity.upper()} {emoji}")
 
-            if st.checkbox('Display Rarity table'):
+            if st.checkbox("Display Rarity table"):
                 show_rarity(rarity)
