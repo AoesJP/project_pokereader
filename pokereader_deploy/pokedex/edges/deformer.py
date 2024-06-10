@@ -21,23 +21,30 @@ with open(str(BASE_CONTOUR_PATH), mode="rb") as f:
     base_contour = pickle.load(f)
 
 
-def apply_contrast(img, alpha=2, beta=-100):
+def apply_contrast(img: np.ndarray, alpha=2, beta=-100) -> np.ndarray:
     _ = img.astype("int16")
     # return np.clip(cv2.convertScaleAbs(_, alpha=alpha, beta=beta), 0, 255).astype(np.uint8)
     return np.clip((_ * alpha) + beta, 0, 255).astype(np.uint8)
 
 
-def apply_blur(img, shift: int = 7):
+def apply_blur(img: np.ndarray, shift: int = 7) -> np.ndarray:
     img = cv2.convertScaleAbs(img)
     return cv2.GaussianBlur(img, (shift, shift), 0)
 
 
-def mono_grad(image, shift):
+def mono_grad(image: np.ndarray, shift) -> np.ndarray:
+    """
+    Extracting edges based on morphologyEx
+    """
     kernel = np.ones((shift, shift), np.uint8)
     return cv2.morphologyEx(image, cv2.MORPH_GRADIENT, kernel)
 
 
-def resize_with_fill(image: np.ndarray, target_width: int, target_height: int):
+def resize_with_fill(image: np.ndarray, target_width: int, target_height: int) -> np.ndarray:
+    """
+    Resizing image with padding
+    """
+
     original_height, original_width = image.shape[:2]
 
     # Calculate the ratio to scale the image
@@ -64,17 +71,10 @@ def flatten_color(img: np.ndarray) -> np.ndarray:
     return np.array([img[:, :, 0].flatten(), img[:, :, 1].flatten(), img[:, :, 2].flatten()]).T
 
 
-# def compress_img(img: np.ndarray, cluster: int = 8) -> np.ndarray:
-#     img_width = img.shape[0]
-#     img_height = img.shape[1]
-#     img_flatten = flatten_color(img)
-#     kmeans = KMeans(8)
-#     kmeans.fit(img_flatten)
-#     img_copressed = kmeans.cluster_centers_.astype(int)[kmeans.labels_]
-#     return img_copressed.reshape((img_width, img_height, 3)).astype(np.uint8)
-
-
 def remove_short_long_contours(contours, resolution: tuple[int, int], min_length: int = 300, max_ratio: float = 0.1) -> list[np.ndarray]:
+    """
+    Removing contours based on length
+    """
     results = []
     max_length = resolution[0] * 2 + resolution[1] * 2
     for contour in contours:
@@ -86,6 +86,9 @@ def remove_short_long_contours(contours, resolution: tuple[int, int], min_length
 
 
 def smooth_contours(contours, ratio: float = 0.0005) -> list[np.ndarray]:
+    """
+    Smoothing contours
+    """
     new_contours = []
     for contour in contours:
         arc_length = cv2.arcLength(contour, closed=True)
@@ -96,7 +99,10 @@ def smooth_contours(contours, ratio: float = 0.0005) -> list[np.ndarray]:
     return new_contours
 
 
-def find_rectangle_contours(contours: tuple[np.ndarray], target_contour: np.ndarray, threshold=0.1):
+def find_rectangle_contours(contours: tuple[np.ndarray], target_contour: np.ndarray, threshold=0.1) -> list[np.ndarray]:
+    """
+    Find countours which match the traget contour shape
+    """
     matches = []
     for contour in contours:
         length = cv2.arcLength(contour, True)
@@ -108,6 +114,9 @@ def find_rectangle_contours(contours: tuple[np.ndarray], target_contour: np.ndar
 
 
 def angle_between(pt0, pt1, pt2) -> float:
+    """
+    Calculate angle between vectors (pt1, pt0) and (pt1, pt2)
+    """
     B = pt0[0]
     C = pt1[0]
     F = pt2[0]
@@ -121,6 +130,9 @@ def angle_between(pt0, pt1, pt2) -> float:
 
 
 def remove_flat_points(contour, threshold: float = 3) -> np.ndarray:
+    """
+    Remove points on a given contour based on angle
+    """
     pt_count = len(contour)
     results = []
 
@@ -135,7 +147,10 @@ def remove_flat_points(contour, threshold: float = 3) -> np.ndarray:
     return np.array(results)
 
 
-def get_coeffs(pt0, pt1):
+def get_coeffs(pt0, pt1) -> tuple[float, float, float]:
+    """
+    Calculate slopes for x and y, and intercept
+    """
     points = [pt0, pt1]
     x_coords, y_coords = zip(*points)
     A = np.vstack([x_coords, np.ones(len(x_coords))]).T
@@ -146,7 +161,11 @@ def get_coeffs(pt0, pt1):
     return a, b, c
 
 
-def reset_orientation(contour):
+def reset_orientation(contour) -> np.ndarray:
+    """
+    Reset contour orientation and make it clock wise orientation
+    """
+
     def is_clockwise(contour):
         return np.cross(contour[1] - contour[0], contour[-1] - contour[0]) > 0
 
@@ -162,7 +181,10 @@ def reset_orientation(contour):
     return np.expand_dims(contour, axis=1)
 
 
-def remove_protrude(img: np.ndarray, contour: np.ndarray, margin: int = 3):
+def remove_protrude(img: np.ndarray, contour: np.ndarray, margin: int = 3) -> np.ndarray:
+    """
+    Remove protruding points
+    """
     img_mask = np.zeros_like(img[:, :, 0])
     cv2.drawContours(img_mask, [contour], -1, (255), thickness=cv2.FILLED)
     kernel = np.ones((2 * margin + 1, 2 * margin + 1), np.uint8)
@@ -176,6 +198,9 @@ def remove_protrude(img: np.ndarray, contour: np.ndarray, margin: int = 3):
 
 
 def calc_lines(lines: np.ndarray) -> np.ndarray:
+    """
+    Calculating line slopes for x and y and intercept from rho and theta
+    """
     lines = lines.squeeze()
     new_lines = []
     for rho, theta in lines:
@@ -187,7 +212,10 @@ def calc_lines(lines: np.ndarray) -> np.ndarray:
     return np.array(new_lines, dtype="float32")
 
 
-def find_intersection(a: tuple, b: tuple):
+def find_intersection(a: tuple, b: tuple) -> np.ndarray:
+    """
+    Find intersections of given two vectors
+    """
     a1, b1, c1 = a[0], a[1], a[2]
     a2, b2, c2 = b[0], b[1], b[2]
     A = np.array([[a1, b1], [a2, b2]])
@@ -200,11 +228,18 @@ def find_intersection(a: tuple, b: tuple):
         raise ValueError("The lines are parallel and do not intersect.")
 
 
-def expand_edges(img, kernel=(2, 2), iterations=1):
+def expand_edges(img: np.ndarray, kernel=(2, 2), iterations=1) -> np.ndarray:
+    """
+    Expand edges
+    """
     return cv2.dilate(img, cv2.getStructuringElement(cv2.MORPH_RECT, ksize=kernel), iterations=iterations)
 
 
-def get_corners_from_contour(contour):
+def get_corners_from_contour(contour) -> np.ndarray:
+    """
+    Calculate corner points from given contour
+    Expecting the contour to have only 4 points
+    """
     pt_count = len(contour)
     ranks = []
     for i in range(0, pt_count):
@@ -232,7 +267,11 @@ def get_corners_from_contour(contour):
     return np.expand_dims(np.array(corners), axis=1).astype(np.int32)
 
 
-def get_corners_from_lines(lines: list[np.ndarray], contour: np.ndarray):
+def get_corners_from_lines(lines: list[np.ndarray], contour: np.ndarray) -> np.ndarray:
+    """
+    Calculate corner points from given lines
+    """
+
     def line_equation(slope, point):
         m = slope
         x1, y1 = point
