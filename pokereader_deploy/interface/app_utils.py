@@ -1,6 +1,7 @@
 import cv2
 from pathlib import Path
 import streamlit as st
+import matplotlib.pyplot as plt
 
 HERE = Path(__file__).parent
 
