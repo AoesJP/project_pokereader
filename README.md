@@ -15,7 +15,14 @@ We have use the Pokemon TCG API to retrieve the price and rarity of a given Poke
 
 Each Pokemon card has a set ID and a card number located either at the bottom left, bottom right or middle right part of the card. This location is consistent for all the cards within each set. In our project, we have focused on the Pokemon sets with the ID located at the bottom left or right of the card.
 
-### Set ID retrieval
+### Normalizing with Edge Detection
+_Import card_
+
+_normalizing with edge detection_
+
+
+### Set ID retrieval with CNN
+
 Here is a list of the sets we have used:
 | set ID | set name | location | number of cards |
 |--------|----------|----------|-----------------|
@@ -40,23 +47,19 @@ Here is a list of the sets we have used:
 | xy6 | Roaring Skies | right | 110 |
 | xy7 | Ancient Origins | right | 100 |
 
-List of sets and get all the cards in each set
-create dataset of bottom corners
-data augmenation
-set id detection with CNN
+_create dataset of bottom corners_
 
-Card
-normalizing with edge detection
+_data augmenation_
 
-bottom cropping
-detect set id from CNN model
+_set id detection with CNN_
 
-text detection through OCR
+### Text detection with OCR
 
-From set id and card number -> API
+_text detection through OCR_
 
+### Retrieve price and rarity from API
 
-
+_From set id and card number -> API_
 
 
 ## Limitations
