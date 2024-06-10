@@ -6,12 +6,16 @@ from sklearn.metrics import confusion_matrix
 
 import cv2
 
-import tensorflow as tf
-from tensorflow.keras import layers, regularizers
+
+from tensorflow.keras import layers
 from tensorflow.keras.models import Sequential
-from tensorflow.layers import Dense, Activation, Dropout, Flatten, Conv2D, MaxPooling2D
+from tensorflow.keras.layers import Dense, Activation, Dropout, Flatten, Conv2D, MaxPooling2D
+
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
+
+import tensorflow as tf
+import tensorflow_datasets as tfds
 
 from pokedex.augmentation import get_augment_data
 from pokedex import HARD_CODED_WIDTH, HARD_CODED_HEIGHT
@@ -63,7 +67,8 @@ def preprocessing(path: str):
 
     return XX_train, y_train, XX_val, y_val, XX_test, y_test, label_encoder
 
-def symbols_model(data_path: str): -> Tuple[tf.keras.Model, Dict[str, List[float]], np.ndarray, LabelEncoder]:
+
+def symbols_model(data_path: str):
     """
     Preprocesses the dataset and trains a convolutional neural network (CNN) model for symbol classification.
 
@@ -127,10 +132,7 @@ def symbols_model(data_path: str): -> Tuple[tf.keras.Model, Dict[str, List[float
         layers.Dense(nb_classes, activation='softmax')
 ])
 
-    learning_rate = 0.01  # Set your desired learning rate here
-    optimizer = Adam(learning_rate=learning_rate)
-
-    model.compile(optimizer=optimizer,
+    model.compile(optimizer='adam',
                     loss='categorical_crossentropy',
                     metrics=['accuracy'])
 
