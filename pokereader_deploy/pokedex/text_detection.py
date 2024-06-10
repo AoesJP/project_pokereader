@@ -11,7 +11,16 @@ import re
 from pokedex import SETINFO
 
 
-def is_groove(img: Image.Image):
+def is_groove(img: Image.Image) -> bool:
+    """
+    Checking if the input image is white text and black bg or black text and white bg
+
+    Args:
+        img (Image.Image): Input image
+
+    Returns:
+        bool: True if the input image is black text with white bg, else False
+    """
     orig_arr = np.array(img, dtype="float32") / 255
     eroded_arr = np.array(img.filter(ImageFilter.GaussianBlur(3)).filter(ImageFilter.MaxFilter(15)), dtype="float32") / 255
     orig_var = orig_arr.var()
